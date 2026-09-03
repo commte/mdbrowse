@@ -25,6 +25,8 @@
     --muted: #59636e;
     --link: #0969da;
     --inline-code-bg: rgba(129, 139, 152, .12);
+    --code-bg: #0d1117;   /* コードブロックはテーマに関係なく暗い面 */
+    --code-fg: #e6edf3;
 
     /* 右上のバー */
     --bar-bg: #ffffff;
@@ -41,6 +43,8 @@
     --muted: #9198a1;     /* fg-muted       */
     --link: #4493f8;      /* accent-fg      */
     --inline-code-bg: rgba(101, 108, 118, .2);
+    --code-bg: #0d1117;
+    --code-fg: #e6edf3;
 
     /* 右上のバー */
     --bar-bg: #212830;    /* canvas-inset より一段明るい面 */
@@ -61,8 +65,15 @@
     word-wrap: break-word;
   }
   h1, h2, h3, h4, h5, h6 { line-height: 1.25; font-weight: 600; margin: 24px 0 16px; }
-  h1 { font-size: 2em; padding-bottom: .3em; border-bottom: 1px solid var(--border); }
-  h2 { font-size: 1.5em; padding-bottom: .3em; border-bottom: 1px solid var(--border); }
+  h1 { font-size: 2em; }
+  h2 { font-size: 1.5em; }
+  /* 線を引くのは、その文書でいちばん浅い2階層（JS が付ける）。
+     節の切れ目が分かるように、上に大きめの余白を取る */
+  .mdrule {
+    margin-top: 80px; padding-bottom: .3em;
+    border-bottom: 1px solid var(--border);
+  }
+  body > :first-child, .mdrule:first-child { margin-top: 0; }
   h3 { font-size: 1.25em; }
   h4 { font-size: 1em; }
   h1:first-child { margin-top: 0; }
@@ -73,11 +84,15 @@
     font-family: var(--code-font-family); font-size: 85%;
     background: var(--inline-code-bg); padding: .2em .4em; border-radius: 6px;
   }
-  pre {
-    background: var(--surface); padding: 16px; border-radius: 6px;
+  /* pandoc 側の .sourceCode より優先度を上げて、コードブロックを暗い面に統一する */
+  pre, pre.sourceCode, div.sourceCode {
+    background: var(--code-bg); color: var(--code-fg);
+    padding: 16px; border-radius: 6px;
     overflow-x: auto; font-size: 85%; line-height: 1.45;
   }
-  pre code { background: none; padding: 0; font-size: 100%; }
+  div.sourceCode { padding: 0; }
+  div.sourceCode > pre { margin: 0; font-size: 100%; }
+  pre code, pre > code.sourceCode { background: transparent; padding: 0; color: inherit; font-size: 100%; }
   blockquote {
     padding: 0 1em; color: var(--muted);
     border-left: .25em solid var(--border);
@@ -214,6 +229,16 @@
     render();
 
     // 目次（右サイドバー）。見出しが少ないファイルでは出さない
+    // その文書でいちばん浅い2階層の見出しに線を引く
+    var allHeads = [].slice.call(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+    if (allHeads.length) {
+      var lvOf = function (h) { return +h.tagName.slice(1); };
+      var shallow = Math.min.apply(null, allHeads.map(lvOf));
+      allHeads.forEach(function (h) {
+        if (lvOf(h) <= shallow + 1) h.classList.add('mdrule');
+      });
+    }
+
     // 見出しのレベルは文書によって違う（h2 起点とは限らない）。
     // 拾えた中でいちばん浅いレベルを基準にして、その1つ下までを目次に出す
     var heads = [].slice.call(document.querySelectorAll('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]'));
@@ -300,6 +325,9 @@
       document.head.appendChild(el);
     }
     checkStamp();
+    // 背面タブではタイマーが大幅に間引かれるので、表示に戻った時点で必ず確認する
+    addEventListener('visibilitychange', function () { if (!document.hidden) checkStamp(); });
+    addEventListener('focus', function () { checkStamp(); });
     setInterval(function () {
       if (paused || printing) return;
       if (Date.now() - lastScroll < 900) return;
