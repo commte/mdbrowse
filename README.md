@@ -52,14 +52,18 @@ md-preview --path    # print the output HTML path
 
 ```json
 {
-  "context": "Workspace",
   "bindings": {
-    "cmd-k b": ["task::Spawn", { "task_name": "Preview in browser" }]
+    "cmd-shift-m": ["task::Spawn", { "task_name": "Preview in browser" }]
   }
 }
 ```
 
-The context must be `Workspace`. `task::Spawn` does not fire from an `Editor` context binding.
+Pick any key you like. Two things to know:
+
+- `cmd-k`-style chord bindings are unreliable for this, because `cmd-k` is already a chord prefix in Zed's default keymaps. Use a single combination.
+- If you do scope the binding with `"context"`, use `Workspace`. `task::Spawn` does not fire from an `Editor` context binding.
+
+`cmd-shift-m` overrides Zed's diagnostics panel shortcut. Your keymap wins over the defaults, and the panel is still reachable from the command palette.
 
 ### VS Code / Cursor / Windsurf
 
