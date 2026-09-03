@@ -1,3 +1,5 @@
+English | [日本語](README.ja.md)
+
 # md-browser-preview
 
 Preview the Markdown file you are editing in a real browser, with your own CSS, from any editor that can run a shell command.
