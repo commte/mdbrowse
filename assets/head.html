@@ -109,7 +109,22 @@
   }
   #mdbar button:hover { background: var(--surface); }
   #mdbar button:active { background: var(--border); }
-  @media print { #mdbar { display: none; } }
+  /* ==== 印刷（PDF 保存） ============================================== */
+  @page { margin: 18mm; }
+  @media print {
+    #mdbar { display: none; }
+    /* テーマに関係なく紙はライトで刷る */
+    :root, :root[data-theme="dark"] {
+      --bg: #ffffff; --surface: #f6f8fa; --border: #d1d9e0;
+      --fg: #1f2328; --muted: #59636e; --link: #0969da;
+      --inline-code-bg: rgba(129, 139, 152, .12);
+    }
+    html, body { background: #ffffff; color: #1f2328; }
+    body { max-width: none; padding: 0; font-size: 10.5pt; }
+    pre, blockquote, table, img, li { break-inside: avoid; }
+    h1, h2, h3, h4 { break-after: avoid; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+  }
 </style>
 <script>
   // 保存済みの設定を body 描画前に当てる（再読み込み時のちらつき防止）
@@ -129,6 +144,9 @@
     var THEMES = ['light', 'dark'];
     var WIDTHS = [1012, 680, 820, 1280];
     var paused = false;
+    var printing = false;
+    addEventListener('beforeprint', function () { printing = true; });
+    addEventListener('afterprint', function () { printing = false; });
 
     function save() { try { localStorage.setItem('mdPreview', JSON.stringify(s)); } catch (e) {} }
     function fontSize() { return s.fontSize || parseInt(getComputedStyle(r).getPropertyValue('--font-size')) || 16; }
@@ -174,7 +192,7 @@
     // 別のファイルで再生成されたら拾うためのポーリング。
     // スクロール中とバー操作中は再読み込みしない
     setInterval(function () {
-      if (paused) return;
+      if (paused || printing) return;
       if (Date.now() - lastScroll < 900) return;
       location.reload();
     }, 1000);
