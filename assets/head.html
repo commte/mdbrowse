@@ -25,17 +25,27 @@
     --muted: #59636e;
     --link: #0969da;
     --inline-code-bg: rgba(129, 139, 152, .12);
+
+    /* 右上のバー */
+    --bar-bg: #ffffff;
+    --bar-border: #d1d9e0;
+    --bar-shadow: 0 3px 8px rgba(31, 35, 40, .18), 0 1px 2px rgba(31, 35, 40, .12);
   }
 
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #0d1117;
-    --surface: #151b23;
-    --border: #3d444d;
-    --fg: #e6edf3;
-    --muted: #9198a1;
-    --link: #4493f8;
+    --bg: #0d1117;        /* canvas-default */
+    --surface: #151b23;   /* canvas-subtle  */
+    --border: #3d444d;    /* border-default */
+    --fg: #f0f6fc;        /* fg-default     */
+    --muted: #9198a1;     /* fg-muted       */
+    --link: #4493f8;      /* accent-fg      */
     --inline-code-bg: rgba(101, 108, 118, .2);
+
+    /* 右上のバー */
+    --bar-bg: #212830;    /* canvas-inset より一段明るい面 */
+    --bar-border: #3d444d;
+    --bar-shadow: 0 3px 8px rgba(1, 4, 9, .85), 0 1px 2px rgba(1, 4, 9, .6);
   }
   /* ==== ここから下は組み方 ============================================ */
   html { background: var(--bg); }
@@ -87,9 +97,9 @@
     position: fixed; top: 16px; right: 16px; z-index: 10;
     display: flex; align-items: center; gap: 2px;
     padding: 4px; border-radius: 8px;
-    background: var(--surface); color: var(--fg);
-    border: 1px solid var(--border);
-    box-shadow: 0 1px 3px rgba(31, 35, 40, .12);
+    background: var(--bar-bg); color: var(--fg);
+    border: 1px solid var(--bar-border);
+    box-shadow: var(--bar-shadow);
     font: 500 12px/1 var(--font-family);
   }
   #mdbar button {
@@ -97,7 +107,7 @@
     padding: 6px 10px; border-radius: 6px; color: var(--fg);
     font: inherit; min-width: 1.4em; text-align: center;
   }
-  #mdbar button:hover { background: var(--bg); }
+  #mdbar button:hover { background: var(--surface); }
   #mdbar button:active { background: var(--border); }
   @media print { #mdbar { display: none; } }
 </style>
@@ -157,12 +167,16 @@
     document.body.appendChild(bar);
     render();
 
-    // スクロール位置の復元
-    var y = sessionStorage.getItem('mdY');
-    if (y) scrollTo(0, +y);
-    addEventListener('scroll', function () { sessionStorage.setItem('mdY', scrollY); });
+    // スクロール位置はブラウザ標準の復元に任せる（手で保存するとカクつく）
+    var lastScroll = 0;
+    addEventListener('scroll', function () { lastScroll = Date.now(); }, { passive: true });
 
-    // 別のファイルで再生成されたら拾うためのポーリング
-    setInterval(function () { if (!paused) location.reload(); }, 1000);
+    // 別のファイルで再生成されたら拾うためのポーリング。
+    // スクロール中とバー操作中は再読み込みしない
+    setInterval(function () {
+      if (paused) return;
+      if (Date.now() - lastScroll < 900) return;
+      location.reload();
+    }, 1000);
   });
 </script>
