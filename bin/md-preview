@@ -55,7 +55,7 @@ if [ ! -f "$src" ]; then
   exit 66
 fi
 
-args=(--standalone --from gfm --metadata "title=$(basename "$src")" --output "$OUT")
+args=(--standalone --from gfm --variable "pagetitle=$(basename "$src")" --output "$OUT")
 [ -f "$HEAD" ] && args+=(--include-in-header "$HEAD")
 
 pandoc "$src" "${args[@]}"
