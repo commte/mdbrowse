@@ -150,7 +150,9 @@ If your editor can run `mdbrowse /path/to/the/current/file.md`, it works.
 
 ## Styling
 
-Everything visual lives in `~/.config/mdbrowse/head.html`: a settings block at the top, the rules that use it, and the script that draws the bar and runs the reload loop. Colors and typography follow GitHub (Primer) by default. Edit that one file and every preview follows; values changed in the bar override them per browser.
+Code blocks are highlighted with [Shiki](https://shiki.style/) (`github-dark` by default; set `MDBROWSE_SHIKI_THEME` to any bundled theme, e.g. `tokyo-night`). Highlighting happens at conversion time, so the page stays static. Without Node available it falls back to pandoc's built-in highlighting.
+
+Everything else visual lives in `~/.config/mdbrowse/head.html`: a settings block at the top, the rules that use it, and the script that draws the bar and runs the reload loop. Colors and typography follow GitHub (Primer) by default. Edit that one file and every preview follows; values changed in the bar override them per browser.
 
 `sample.md` in this repository exercises headings, lists, task lists, quotes, code blocks, tables and links — render it to check your styling:
 

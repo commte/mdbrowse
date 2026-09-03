@@ -14,7 +14,9 @@ command -v pandoc >/dev/null 2>&1 || {
 }
 
 mkdir -p "$bin_dir" "$config_dir"
-install -m 755 "$here/bin/mdbrowse" "$bin_dir/mdbrowse"
+# コピーではなくリンクにする。スクリプトが自分の場所からリポジトリ内の
+# lib/highlight.mjs と node_modules を辿れるようにするため
+ln -sfn "$here/bin/mdbrowse" "$bin_dir/mdbrowse"
 
 if [ -f "$config_dir/head.html" ] && [ "$force" -eq 0 ]; then
   echo "kept your existing stylesheet: $config_dir/head.html  (use --force to overwrite)"

@@ -89,12 +89,20 @@ if [ ! -f "$src" ]; then
   exit 66
 fi
 
+# コードの色付けは Shiki（node がある場合）。無ければ pandoc 内蔵の skylighting
+SELF_DIR="$(resolve_dir "$0")"
+HIGHLIGHTER="$SELF_DIR/../lib/highlight.mjs"
+use_shiki=0
+if command -v node >/dev/null 2>&1 && [ -f "$HIGHLIGHTER" ]; then
+  use_shiki=1
+fi
+
 # シンタックスハイライトの指定は pandoc 3.9 で名前が変わった
 pv="$(pandoc --version | head -1 | awk '{print $2}')"
 if [ "$(printf '%s\n3.9\n' "$pv" | sort -V | head -1)" = "3.9" ]; then
-  hl=(--syntax-highlighting breezedark)
+  if [ "$use_shiki" -eq 1 ]; then hl=(--syntax-highlighting none); else hl=(--syntax-highlighting breezedark); fi
 else
-  hl=(--highlight-style breezedark)
+  if [ "$use_shiki" -eq 1 ]; then hl=(--no-highlight); else hl=(--highlight-style breezedark); fi
 fi
 
 args=(--standalone --from gfm "${hl[@]}" --variable "pagetitle=$(basename "$src")" --output "$OUT")
@@ -106,6 +114,11 @@ pandoc "$src" "${args[@]}"
 # そのままでは解決できない。ソースのあるディレクトリ基準の file:// に書き換える。
 # http(s) / data: / mailto: / 絶対パス / ページ内アンカーはそのまま残す
 src_dir="$(cd "$(dirname "$src")" && pwd)"
+# コードブロックを Shiki で色付けし直す。失敗しても変換自体は成立させる
+if [ "$use_shiki" -eq 1 ]; then
+  node "$HIGHLIGHTER" "$OUT" || true
+fi
+
 # frontmatter の title を pandoc が拾うと本文の先頭に見出しが増えるので落とす。
 # ブラウザのタブ名には pagetitle を使っている
 perl -0pi -e 's#<header id="title-block-header">.*?</header>\n?##s' "$OUT"
