@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# md-browser-preview — render a Markdown file to a fixed HTML path so the
+# browser tab can stay open and just swap its contents.
+set -euo pipefail
+
+VERSION="0.1.0"
+OUT="${MD_PREVIEW_OUT:-/tmp/md-preview.html}"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/md-browser-preview"
+HEAD="${MD_PREVIEW_HEAD:-$CONFIG_DIR/head.html}"
+
+usage() {
+  cat <<'USAGE'
+md-preview — render Markdown to a fixed HTML file for browser preview
+
+Usage:
+  md-preview <file.md>   render the file (overwrites the output HTML)
+  md-preview --open      open the preview tab in the default browser
+  md-preview --path      print the output HTML path
+  md-preview --version   print the version
+
+Environment:
+  MD_PREVIEW_OUT    output HTML path   (default: /tmp/md-preview.html)
+  MD_PREVIEW_HEAD   stylesheet/header  (default: $XDG_CONFIG_HOME/md-browser-preview/head.html)
+
+The generated page reloads itself every second, so pointing the editor at a
+different file swaps the contents of the same tab instead of opening a new one.
+USAGE
+}
+
+open_url() {
+  if command -v open >/dev/null 2>&1; then open "file://$OUT"
+  elif command -v xdg-open >/dev/null 2>&1; then xdg-open "file://$OUT"
+  else echo "file://$OUT"
+  fi
+}
+
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+  -v|--version) echo "md-preview $VERSION"; exit 0 ;;
+  --path) echo "$OUT"; exit 0 ;;
+  --open)
+    [ -f "$OUT" ] || printf '<!doctype html><meta charset="utf-8"><p>No preview yet.' > "$OUT"
+    open_url; exit 0 ;;
+  "") usage; exit 2 ;;
+esac
+
+src="$1"
+
+if ! command -v pandoc >/dev/null 2>&1; then
+  echo "md-preview: pandoc not found. Install it first (macOS: brew install pandoc)" >&2
+  exit 127
+fi
+if [ ! -f "$src" ]; then
+  echo "md-preview: no such file: $src" >&2
+  exit 66
+fi
+
+args=(--standalone --from gfm --metadata "title=$(basename "$src")" --output "$OUT")
+[ -f "$HEAD" ] && args+=(--include-in-header "$HEAD")
+
+pandoc "$src" "${args[@]}"
