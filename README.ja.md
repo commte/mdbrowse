@@ -1,6 +1,6 @@
 [English](README.md) | 日本語
 
-# md-browser-preview
+# mdbrowse
 
 編集中の Markdown を、自分の CSS でブラウザに表示する。シェルコマンドを実行できるエディタなら何でも使える
 
@@ -22,31 +22,52 @@
 ## インストール
 
 ```sh
-git clone https://github.com/commte/md-browser-preview.git
-cd md-browser-preview
+npm install -g mdbrowse
+```
+
+インストールせずに試す場合
+
+```sh
+npx mdbrowse file.md
+```
+
+スタイルシートはパッケージに同梱されている。自分で編集したい場合は `~/.config/mdbrowse/head.html` に取り出す。以後はそちらが同梱版より優先される
+
+```sh
+mdbrowse --eject
+```
+
+<details>
+<summary>ソースからインストールする場合</summary>
+
+```sh
+git clone https://github.com/commte/mdbrowse.git
+cd mdbrowse
 ./install.sh
 ```
 
-`md-preview` が `~/.local/bin` に、スタイルシートが `~/.config/md-browser-preview/head.html` に入る。再インストールしても自分で編集したスタイルシートは上書きされない。配布時の状態に戻したいときは `--force` を付ける
+`mdbrowse` が `~/.local/bin` に、スタイルシートが `~/.config/mdbrowse/head.html` に入る。再インストールしても自分で編集したスタイルシートは上書きされない。配布時の状態に戻したいときは `--force` を付ける
+
+</details>
 
 プレビュー用のタブを1回だけ開いて、そのままにしておく
 
 ```sh
-md-preview --open
+mdbrowse --open
 ```
 
 ## 使い方
 
 ```sh
-md-preview file.md   # 変換する（出力 HTML を上書きする）
-md-preview --open    # プレビュー用のタブを開く
-md-preview --path    # 出力先の HTML のパスを表示する
+mdbrowse file.md   # 変換する（出力 HTML を上書きする）
+mdbrowse --open    # プレビュー用のタブを開く
+mdbrowse --path    # 出力先の HTML のパスを表示する
 ```
 
 | 環境変数 | 既定値 | |
 |---|---|---|
-| `MD_PREVIEW_OUT` | `/tmp/md-preview.html` | 出力先の HTML |
-| `MD_PREVIEW_HEAD` | `~/.config/md-browser-preview/head.html` | スタイルとブラウザ側のスクリプト |
+| `MDBROWSE_OUT` | `/tmp/mdbrowse.html` | 出力先の HTML |
+| `MDBROWSE_HEAD` | `~/.config/mdbrowse/head.html` | スタイルとブラウザ側のスクリプト |
 
 ## ページ内の操作
 
@@ -86,7 +107,7 @@ md-preview --path    # 出力先の HTML のパスを表示する
     {
       "label": "Preview in browser",
       "type": "shell",
-      "command": "md-preview",
+      "command": "mdbrowse",
       "args": ["${file}"],
       "presentation": { "reveal": "never" },
       "problemMatcher": []
@@ -101,47 +122,47 @@ md-preview --path    # 出力先の HTML のパスを表示する
 
 ```lua
 vim.keymap.set("n", "<leader>mp", function()
-  vim.fn.jobstart({ "md-preview", vim.fn.expand("%:p") })
+  vim.fn.jobstart({ "mdbrowse", vim.fn.expand("%:p") })
 end)
 
 -- 保存のたびに更新する場合
 vim.api.nvim_create_autocmd("BufWritePost", {
   pattern = "*.md",
-  callback = function() vim.fn.jobstart({ "md-preview", vim.fn.expand("%:p") }) end,
+  callback = function() vim.fn.jobstart({ "mdbrowse", vim.fn.expand("%:p") }) end,
 })
 ```
 
 ### JetBrains 系
 
-設定 → ツール → 外部ツール で `md-preview` を追加し、引数に `$FilePath$` を指定する。Keymap でショートカットを割り当てる
+設定 → ツール → 外部ツール で `mdbrowse` を追加し、引数に `$FilePath$` を指定する。Keymap でショートカットを割り当てる
 
 ### Emacs
 
 ```elisp
-(defun md-preview ()
+(defun mdbrowse ()
   (interactive)
-  (start-process "md-preview" nil "md-preview" (buffer-file-name)))
+  (start-process "mdbrowse" nil "mdbrowse" (buffer-file-name)))
 ```
 
 ### それ以外
 
-`md-preview /path/to/current/file.md` を実行できるエディタなら動く
+`mdbrowse /path/to/current/file.md` を実行できるエディタなら動く
 
 ## 見た目を変える
 
-見た目に関わるものは `~/.config/md-browser-preview/head.html` に集まっている。先頭の設定ブロック、それを使う CSS、バーと更新検知のスクリプトという構成で、配色とタイポグラフィは GitHub（Primer）に合わせてある。このファイルを直せば全ファイルのプレビューに反映される。バーで変更した値は、その人のブラウザ側で既定値を上書きする
+見た目に関わるものは `~/.config/mdbrowse/head.html` に集まっている。先頭の設定ブロック、それを使う CSS、バーと更新検知のスクリプトという構成で、配色とタイポグラフィは GitHub（Primer）に合わせてある。このファイルを直せば全ファイルのプレビューに反映される。バーで変更した値は、その人のブラウザ側で既定値を上書きする
 
 表示確認用に `sample.md` が入っている
 
 ```sh
-md-preview sample.md
+mdbrowse sample.md
 ```
 
 ## 仕組み
 
 ```
-エディタのショートカット → md-preview <file> → pandoc → /tmp/md-preview.html
-                                                      → /tmp/md-preview-stamp.js
+エディタのショートカット → mdbrowse <file> → pandoc → /tmp/mdbrowse.html
+                                                      → /tmp/mdbrowse-stamp.js
                                                               ↑
                                        ブラウザがスタンプを見て、変化したときだけ再読み込み
 ```

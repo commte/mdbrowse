@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Install md-preview into ~/.local/bin and the stylesheet into ~/.config/md-browser-preview
+# Install mdbrowse into ~/.local/bin and the stylesheet into ~/.config/mdbrowse
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-bin_dir="${MD_PREVIEW_BIN_DIR:-$HOME/.local/bin}"
+bin_dir="${MDBROWSE_BIN_DIR:-$HOME/.local/bin}"
 force=0
 [ "${1:-}" = "--force" ] && force=1   # overwrite the installed stylesheet
-config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/md-browser-preview"
+config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/mdbrowse"
 
 command -v pandoc >/dev/null 2>&1 || {
   echo "pandoc not found. Install it first (macOS: brew install pandoc, Debian: apt install pandoc)" >&2
@@ -14,7 +14,7 @@ command -v pandoc >/dev/null 2>&1 || {
 }
 
 mkdir -p "$bin_dir" "$config_dir"
-install -m 755 "$here/bin/md-preview" "$bin_dir/md-preview"
+install -m 755 "$here/bin/mdbrowse" "$bin_dir/mdbrowse"
 
 if [ -f "$config_dir/head.html" ] && [ "$force" -eq 0 ]; then
   echo "kept your existing stylesheet: $config_dir/head.html  (use --force to overwrite)"
@@ -23,7 +23,7 @@ else
   echo "installed stylesheet: $config_dir/head.html"
 fi
 
-echo "installed: $bin_dir/md-preview"
+echo "installed: $bin_dir/mdbrowse"
 
 # Zed task file — never overwrite an existing one
 zed_dir="${XDG_CONFIG_HOME:-$HOME/.config}/zed"
@@ -32,7 +32,7 @@ if [ -d "$zed_dir" ]; then
 [
   {
     "label": "Preview in browser",
-    "command": "$bin_dir/md-preview",
+    "command": "$bin_dir/mdbrowse",
     "args": ["\$ZED_FILE"],
     "reveal": "never",
     "show_summary": false,
@@ -41,7 +41,7 @@ if [ -d "$zed_dir" ]; then
   },
   {
     "label": "Open preview tab",
-    "command": "$bin_dir/md-preview",
+    "command": "$bin_dir/mdbrowse",
     "args": ["--open"],
     "reveal": "never",
     "show_summary": false,
@@ -63,9 +63,9 @@ fi
 
 case ":$PATH:" in
   *":$bin_dir:"*) ;;
-  *) echo; echo "note: $bin_dir is not on your PATH. Add it, or call md-preview by its full path." ;;
+  *) echo; echo "note: $bin_dir is not on your PATH. Add it, or call mdbrowse by its full path." ;;
 esac
 
 echo
 echo "Next: open the preview tab once, then bind a key in your editor (see README)."
-echo "  md-preview --open"
+echo "  mdbrowse --open"

@@ -1,0 +1,39 @@
+{
+  "name": "mdbrowse",
+  "version": "0.1.0",
+  "description": "Preview the Markdown file you are editing in a real browser, with your own CSS, from any editor that can run a shell command. No server, no port.",
+  "bin": {
+    "mdbrowse": "bin/mdbrowse"
+  },
+  "files": [
+    "bin/mdbrowse",
+    "assets/head.html",
+    "sample.md",
+    "README.md",
+    "README.ja.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "markdown",
+    "preview",
+    "pandoc",
+    "editor",
+    "zed",
+    "neovim",
+    "cli"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/commte/mdbrowse.git"
+  },
+  "homepage": "https://github.com/commte/mdbrowse#readme",
+  "bugs": {
+    "url": "https://github.com/commte/mdbrowse/issues"
+  },
+  "author": "commte",
+  "license": "MIT",
+  "os": [
+    "darwin",
+    "linux"
+  ]
+}

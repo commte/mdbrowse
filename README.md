@@ -1,6 +1,6 @@
 English | [日本語](README.ja.md)
 
-# md-browser-preview
+# mdbrowse
 
 Preview the Markdown file you are editing in a real browser, with your own CSS, from any editor that can run a shell command.
 
@@ -22,31 +22,52 @@ Because the output path never changes, switching between files does not open new
 ## Install
 
 ```sh
-git clone https://github.com/commte/md-browser-preview.git
-cd md-browser-preview
+npm install -g mdbrowse
+```
+
+Or without installing anything:
+
+```sh
+npx mdbrowse file.md
+```
+
+The stylesheet ships with the package. To customize it, copy it to `~/.config/mdbrowse/head.html` — that copy wins over the bundled one from then on:
+
+```sh
+mdbrowse --eject
+```
+
+<details>
+<summary>Install from source instead</summary>
+
+```sh
+git clone https://github.com/commte/mdbrowse.git
+cd mdbrowse
 ./install.sh
 ```
 
-This installs `md-preview` into `~/.local/bin` and a stylesheet into `~/.config/md-browser-preview/head.html`. Your stylesheet is never overwritten on reinstall; pass `--force` when you do want the shipped one back.
+This installs `mdbrowse` into `~/.local/bin` and the stylesheet into `~/.config/mdbrowse/head.html`. Your stylesheet is never overwritten on reinstall; pass `--force` when you do want the shipped one back.
+
+</details>
 
 Open the preview tab once and leave it open:
 
 ```sh
-md-preview --open
+mdbrowse --open
 ```
 
 ## Usage
 
 ```sh
-md-preview file.md   # render (overwrites the output HTML)
-md-preview --open    # open the preview tab
-md-preview --path    # print the output HTML path
+mdbrowse file.md   # render (overwrites the output HTML)
+mdbrowse --open    # open the preview tab
+mdbrowse --path    # print the output HTML path
 ```
 
 | Variable | Default | |
 |---|---|---|
-| `MD_PREVIEW_OUT` | `/tmp/md-preview.html` | output HTML path |
-| `MD_PREVIEW_HEAD` | `~/.config/md-browser-preview/head.html` | stylesheet and browser script |
+| `MDBROWSE_OUT` | `/tmp/mdbrowse.html` | output HTML path |
+| `MDBROWSE_HEAD` | `~/.config/mdbrowse/head.html` | stylesheet and browser script |
 
 ## In-page controls
 
@@ -86,7 +107,7 @@ Two things worth knowing:
     {
       "label": "Preview in browser",
       "type": "shell",
-      "command": "md-preview",
+      "command": "mdbrowse",
       "args": ["${file}"],
       "presentation": { "reveal": "never" },
       "problemMatcher": []
@@ -101,47 +122,47 @@ Bind it in `keybindings.json` with `workbench.action.tasks.runTask`.
 
 ```lua
 vim.keymap.set("n", "<leader>mp", function()
-  vim.fn.jobstart({ "md-preview", vim.fn.expand("%:p") })
+  vim.fn.jobstart({ "mdbrowse", vim.fn.expand("%:p") })
 end)
 
 -- or update the preview on every save
 vim.api.nvim_create_autocmd("BufWritePost", {
   pattern = "*.md",
-  callback = function() vim.fn.jobstart({ "md-preview", vim.fn.expand("%:p") }) end,
+  callback = function() vim.fn.jobstart({ "mdbrowse", vim.fn.expand("%:p") }) end,
 })
 ```
 
 ### JetBrains IDEs
 
-Settings → Tools → External Tools → add `md-preview` with `$FilePath$` as the argument, then assign a shortcut under Keymap.
+Settings → Tools → External Tools → add `mdbrowse` with `$FilePath$` as the argument, then assign a shortcut under Keymap.
 
 ### Emacs
 
 ```elisp
-(defun md-preview ()
+(defun mdbrowse ()
   (interactive)
-  (start-process "md-preview" nil "md-preview" (buffer-file-name)))
+  (start-process "mdbrowse" nil "mdbrowse" (buffer-file-name)))
 ```
 
 ### Anything else
 
-If your editor can run `md-preview /path/to/the/current/file.md`, it works.
+If your editor can run `mdbrowse /path/to/the/current/file.md`, it works.
 
 ## Styling
 
-Everything visual lives in `~/.config/md-browser-preview/head.html`: a settings block at the top, the rules that use it, and the script that draws the bar and runs the reload loop. Colors and typography follow GitHub (Primer) by default. Edit that one file and every preview follows; values changed in the bar override them per browser.
+Everything visual lives in `~/.config/mdbrowse/head.html`: a settings block at the top, the rules that use it, and the script that draws the bar and runs the reload loop. Colors and typography follow GitHub (Primer) by default. Edit that one file and every preview follows; values changed in the bar override them per browser.
 
 `sample.md` in this repository exercises headings, lists, task lists, quotes, code blocks, tables and links — render it to check your styling:
 
 ```sh
-md-preview sample.md
+mdbrowse sample.md
 ```
 
 ## How it works
 
 ```
-editor shortcut → md-preview <file> → pandoc → /tmp/md-preview.html
-                                             → /tmp/md-preview-stamp.js
+editor shortcut → mdbrowse <file> → pandoc → /tmp/mdbrowse.html
+                                             → /tmp/mdbrowse-stamp.js
                                                       ↑
                               browser polls the stamp, reloads only on change
 ```

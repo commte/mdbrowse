@@ -147,7 +147,7 @@
   // 保存済みの設定を body 描画前に当てる（再読み込み時のちらつき防止）
   (function () {
     var s = {};
-    try { s = JSON.parse(localStorage.getItem('mdPreview') || '{}'); } catch (e) {}
+    try { s = JSON.parse(localStorage.getItem('mdbrowse') || '{}'); } catch (e) {}
     var r = document.documentElement;
     r.dataset.theme = (s.theme === 'dark') ? 'dark' : 'light';
     if (s.fontSize) r.style.setProperty('--font-size', s.fontSize + 'px');
@@ -165,7 +165,7 @@
     addEventListener('beforeprint', function () { printing = true; });
     addEventListener('afterprint', function () { printing = false; });
 
-    function save() { try { localStorage.setItem('mdPreview', JSON.stringify(s)); } catch (e) {} }
+    function save() { try { localStorage.setItem('mdbrowse', JSON.stringify(s)); } catch (e) {} }
     function fontSize() { return s.fontSize || parseInt(getComputedStyle(r).getPropertyValue('--font-size')) || 16; }
 
     function applyToc() {
@@ -269,7 +269,7 @@
       });
     });
 
-    // 更新の判定。md-preview が書き出すスタンプを読み、変わったときだけ再読み込みする。
+    // 更新の判定。mdbrowse が書き出すスタンプを読み、変わったときだけ再読み込みする。
     // 毎秒リロードすると画像が読み直されてちらつくため
     var stampUrl = location.pathname.replace(/\.html$/, '-stamp.js');
     var known = null;
@@ -278,7 +278,7 @@
       el.src = stampUrl + '?t=' + Date.now();
       el.onload = function () {
         el.remove();
-        var v = window.__mdStamp;
+        var v = window.__mdbrowseStamp;
         if (known === null) { known = v; return; }
         if (v !== known) location.reload();
       };

@@ -1,6 +1,6 @@
 # Markdown 記法サンプル
 
-このファイルは md-browser-preview の表示確認用です。見出し、リスト、表、コードなど、日常的に使う記法をひと通り並べてあります。
+このファイルは mdbrowse の表示確認用です。見出し、リスト、表、コードなど、日常的に使う記法をひと通り並べてあります。
 
 ## 見出し
 
@@ -47,7 +47,7 @@
 
 ## コード
 
-インラインは `md-preview sample.md` のように書きます。
+インラインは `mdbrowse sample.md` のように書きます。
 
 ブロックは3つのバッククォートで囲みます。言語名を書けます。
 
@@ -56,14 +56,14 @@
 set -euo pipefail
 
 for f in *.md; do
-  md-preview "$f"
+  mdbrowse "$f"
 done
 ```
 
 ```json
 {
   "label": "Preview in browser",
-  "command": "md-preview",
+  "command": "mdbrowse",
   "args": ["$ZED_FILE"]
 }
 ```
@@ -71,15 +71,15 @@ done
 横に長い行は、はみ出さずにブロックの中でスクロールします。
 
 ```
-pandoc input.md --standalone --from gfm --variable "pagetitle=input.md" --include-in-header head.html --output /tmp/md-preview.html
+pandoc input.md --standalone --from gfm --variable "pagetitle=input.md" --include-in-header head.html --output /tmp/mdbrowse.html
 ```
 
 ## 表
 
 | 項目 | 既定値 | 説明 |
 |---|---|---|
-| `MD_PREVIEW_OUT` | `/tmp/md-preview.html` | 出力先の HTML |
-| `MD_PREVIEW_HEAD` | `~/.config/md-browser-preview/head.html` | スタイルとリロード用スクリプト |
+| `MDBROWSE_OUT` | `/tmp/mdbrowse.html` | 出力先の HTML |
+| `MDBROWSE_HEAD` | `~/.config/mdbrowse/head.html` | スタイルとリロード用スクリプト |
 | `--content-width` | `800px` | 本文の幅 |
 
 ## リンク

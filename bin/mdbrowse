@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# mdbrowse — render a Markdown file to a fixed HTML path so the
+# browser tab can stay open and just swap its contents.
+set -euo pipefail
+
+VERSION="0.1.0"
+OUT="${MDBROWSE_OUT:-/tmp/mdbrowse.html}"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mdbrowse"
+
+# スタイルシートの探索順
+#   1. MDBROWSE_HEAD
+#   2. ユーザー設定 ~/.config/mdbrowse/head.html
+#   3. 同梱のもの（npm でインストールした場合はここが使われる）
+resolve_dir() {
+  local src="$1" dir
+  while [ -L "$src" ]; do
+    dir="$(cd -P "$(dirname "$src")" && pwd)"
+    src="$(readlink "$src")"
+    case "$src" in /*) ;; *) src="$dir/$src" ;; esac
+  done
+  (cd -P "$(dirname "$src")" && pwd)
+}
+BUNDLED_HEAD="$(resolve_dir "$0")/../assets/head.html"
+
+if [ -n "${MDBROWSE_HEAD:-}" ]; then
+  HEAD="$MDBROWSE_HEAD"
+elif [ -f "$CONFIG_DIR/head.html" ]; then
+  HEAD="$CONFIG_DIR/head.html"
+else
+  HEAD="$BUNDLED_HEAD"
+fi
+
+usage() {
+  cat <<'USAGE'
+mdbrowse — render Markdown to a fixed HTML file for browser preview
+
+Usage:
+  mdbrowse <file.md>   render the file (overwrites the output HTML)
+  mdbrowse --open      open the preview tab in the default browser
+  mdbrowse --eject     copy the bundled stylesheet into your config directory
+  mdbrowse --path      print the output HTML path
+  mdbrowse --version   print the version
+
+Environment:
+  MDBROWSE_OUT    output HTML path   (default: /tmp/mdbrowse.html)
+  MDBROWSE_HEAD   stylesheet/header  (default: $XDG_CONFIG_HOME/mdbrowse/head.html)
+
+Rendering also writes a stamp file next to the output. The page watches that
+stamp and reloads only when you render something new, so pointing the editor at
+a different file swaps the contents of the same tab instead of opening one.
+USAGE
+}
+
+open_url() {
+  if command -v open >/dev/null 2>&1; then open "file://$OUT"
+  elif command -v xdg-open >/dev/null 2>&1; then xdg-open "file://$OUT"
+  else echo "file://$OUT"
+  fi
+}
+
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+  -v|--version) echo "mdbrowse $VERSION"; exit 0 ;;
+  --path) echo "$OUT"; exit 0 ;;
+  --eject)
+    mkdir -p "$CONFIG_DIR"
+    if [ -f "$CONFIG_DIR/head.html" ] && [ "${2:-}" != "--force" ]; then
+      echo "mdbrowse: $CONFIG_DIR/head.html already exists (pass --force to overwrite)" >&2
+      exit 1
+    fi
+    cp "$BUNDLED_HEAD" "$CONFIG_DIR/head.html"
+    echo "$CONFIG_DIR/head.html"
+    exit 0 ;;
+  --open)
+    [ -f "$OUT" ] || printf '<!doctype html><meta charset="utf-8"><p>No preview yet.' > "$OUT"
+    [ -f "${OUT%.html}-stamp.js" ] || printf 'window.__mdbrowseStamp="0";\n' > "${OUT%.html}-stamp.js"
+    open_url; exit 0 ;;
+  "") usage; exit 2 ;;
+esac
+
+src="$1"
+
+if ! command -v pandoc >/dev/null 2>&1; then
+  echo "mdbrowse: pandoc not found. Install it first (macOS: brew install pandoc)" >&2
+  exit 127
+fi
+if [ ! -f "$src" ]; then
+  echo "mdbrowse: no such file: $src" >&2
+  exit 66
+fi
+
+args=(--standalone --from gfm --variable "pagetitle=$(basename "$src")" --output "$OUT")
+[ -f "$HEAD" ] && args+=(--include-in-header "$HEAD")
+
+pandoc "$src" "${args[@]}"
+
+# 出力先が /tmp なので、元ファイルからの相対パス（画像・ローカルリンク）が
+# そのままでは解決できない。ソースのあるディレクトリ基準の file:// に書き換える。
+# http(s) / data: / mailto: / 絶対パス / ページ内アンカーはそのまま残す
+src_dir="$(cd "$(dirname "$src")" && pwd)"
+sed -E \
+  -e 's#(src|href)="(https?://|data:|mailto:|file://|/|\#)#\1="@@KEEP@@\2#g' \
+  -e "s#(src|href)=\"#\1=\"file://$src_dir/#g" \
+  -e 's#(src|href)="file://[^"]*@@KEEP@@#\1="#g' \
+  "$OUT" > "$OUT.tmp" && mv "$OUT.tmp" "$OUT"
+
+# 更新の目印。ブラウザはこれを見て、中身が変わったときだけ読み直す
+printf 'window.__mdbrowseStamp="%s";\n' "$(date +%s)-$RANDOM" > "${OUT%.html}-stamp.js"
