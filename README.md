@@ -48,7 +48,9 @@ md-preview --path    # print the output HTML path
 
 ## In-page controls
 
-A small bar sits in the top-right corner: theme, font size, and content width. Choices are stored in the browser, so they survive reloads and apply to every file you preview afterwards. Nothing is written to disk and no server is involved.
+A small bar sits in the top-right corner: theme, font size, content width, and a toggle for the table of contents. Choices are stored in the browser, so they survive reloads and apply to every file you preview afterwards. Nothing is written to disk and no server is involved.
+
+The table of contents is built from the headings of the current file and follows your position as you scroll. It appears when a file has at least three headings.
 
 ![Dark theme](docs/preview-dark.png)
 
@@ -132,8 +134,6 @@ Everything visual lives in `~/.config/md-browser-preview/head.html`: a settings 
 ```sh
 md-preview sample.md
 ```
-
-![Code blocks and tables](docs/preview-code.png)
 
 ## How it works
 

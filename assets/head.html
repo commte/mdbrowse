@@ -9,8 +9,8 @@
   :root {
     color-scheme: light;
 
-    /* レイアウト（GitHub の本文と同じ 16px / 1.5、幅 1012px） */
-    --content-width: 1012px;
+    /* レイアウト（文字と行間は GitHub と同じ 16px / 1.5） */
+    --content-width: 800px;
     --font-size: 16px;
     --line-height: 1.5;
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
@@ -109,10 +109,27 @@
   }
   #mdbar button:hover { background: var(--surface); }
   #mdbar button:active { background: var(--border); }
+  /* ==== 目次（右サイドバー） ========================================== */
+  #mdtoc {
+    position: fixed; top: 64px; right: 16px; z-index: 9;
+    width: 248px; max-height: calc(100vh - 96px); overflow-y: auto;
+    padding: 4px 0; font: 13.5px/1.7 var(--font-family); color: var(--muted);
+  }
+  #mdtoc a {
+    display: block; padding: 4px 10px; border-radius: 6px;
+    color: var(--muted); text-decoration: none;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #mdtoc a:hover { background: var(--surface); color: var(--fg); text-decoration: none; }
+  #mdtoc a.is-current { background: var(--surface); color: var(--fg); font-weight: 600; }
+  #mdtoc a[data-level="3"] { padding-left: 22px; font-size: 12.5px; }
+  /* 目次は幅に関係なく出す。その分の余白をページ右に確保する */
+  html.has-toc { padding-right: 280px; }
+
   /* ==== 印刷（PDF 保存） ============================================== */
   @page { margin: 18mm; }
   @media print {
-    #mdbar { display: none; }
+    #mdbar, #mdtoc { display: none; }
     /* テーマに関係なく紙はライトで刷る */
     :root, :root[data-theme="dark"] {
       --bg: #ffffff; --surface: #f6f8fa; --border: #d1d9e0;
@@ -142,7 +159,7 @@
     var r = document.documentElement;
     var s = window.__mdSettings || {};
     var THEMES = ['light', 'dark'];
-    var WIDTHS = [1012, 680, 820, 1280];
+    var WIDTHS = [800, 680, 960, 1200];
     var paused = false;
     var printing = false;
     addEventListener('beforeprint', function () { printing = true; });
@@ -151,13 +168,21 @@
     function save() { try { localStorage.setItem('mdPreview', JSON.stringify(s)); } catch (e) {} }
     function fontSize() { return s.fontSize || parseInt(getComputedStyle(r).getPropertyValue('--font-size')) || 16; }
 
+    function applyToc() {
+      var el = document.getElementById('mdtoc');
+      var on = (s.toc !== false) && !!el;
+      if (el) el.style.display = on ? '' : 'none';
+      r.classList.toggle('has-toc', on);
+    }
+
     var bar = document.createElement('div');
     bar.id = 'mdbar';
     bar.innerHTML =
       '<button data-act="theme" title="テーマ"></button>' +
       '<button data-act="dec" title="文字を小さく">A-</button>' +
       '<button data-act="inc" title="文字を大きく">A+</button>' +
-      '<button data-act="width" title="本文の幅">&#8596;</button>';
+      '<button data-act="width" title="本文の幅">&#8596;</button>' +
+      '<button data-act="toc" title="目次">&#9776;</button>';
 
     function render() { bar.querySelector('[data-act=theme]').textContent = r.dataset.theme; }
 
@@ -170,6 +195,9 @@
       } else if (act === 'inc' || act === 'dec') {
         s.fontSize = Math.min(24, Math.max(12, fontSize() + (act === 'inc' ? 1 : -1)));
         r.style.setProperty('--font-size', s.fontSize + 'px');
+      } else if (act === 'toc') {
+        s.toc = (s.toc === false);
+        applyToc();
       } else if (act === 'width') {
         var i = WIDTHS.indexOf(s.width || 780);
         s.width = WIDTHS[(i + 1) % WIDTHS.length];
@@ -184,6 +212,44 @@
 
     document.body.appendChild(bar);
     render();
+
+    // 目次（右サイドバー）。見出しが少ないファイルでは出さない
+    var heads = [].slice.call(document.querySelectorAll('h2[id], h3[id]'));
+    if (heads.length >= 3) {
+      var toc = document.createElement('nav');
+      toc.id = 'mdtoc';
+      var links = {};
+      heads.forEach(function (h) {
+        var a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.textContent = h.textContent;
+        a.title = h.textContent;
+        a.dataset.level = (h.tagName === 'H3') ? '3' : '2';
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        toc.appendChild(a);
+        links[h.id] = a;
+      });
+      document.body.appendChild(toc);
+      applyToc();
+
+      // いま読んでいる見出しを目立たせる
+      var visible = [];
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          var id = en.target.id;
+          var i = visible.indexOf(id);
+          if (en.isIntersecting) { if (i < 0) visible.push(id); }
+          else if (i >= 0) { visible.splice(i, 1); }
+        });
+        visible.sort(function (a, b) { return heads.findIndex(function (h) { return h.id === a; }) - heads.findIndex(function (h) { return h.id === b; }); });
+        var current = visible[0];
+        Object.keys(links).forEach(function (id) { links[id].classList.toggle('is-current', id === current); });
+      }, { rootMargin: '0px 0px -75% 0px' });
+      heads.forEach(function (h) { io.observe(h); });
+    }
 
     // スクロール位置はブラウザ標準の復元に任せる（手で保存するとカクつく）
     var lastScroll = 0;
