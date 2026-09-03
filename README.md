@@ -167,7 +167,7 @@ editor shortcut → mdbrowse <file> → pandoc → /tmp/mdbrowse.html
                               browser polls the stamp, reloads only on change
 ```
 
-Relative paths in the source file (images, links to neighbouring files) are rewritten to absolute `file://` URLs during conversion, so images show up even though the HTML lives in `/tmp`. Absolute paths, `http(s)`, `data:`, `mailto:` and in-page anchors are left alone.
+YAML front matter is consumed rather than printed: the file's own `title` does not become a second heading above your document. Relative paths in the source file (images, links to neighbouring files) are rewritten to absolute `file://` URLs during conversion, so images show up even though the HTML lives in `/tmp`. Absolute paths, `http(s)`, `data:`, `mailto:` and in-page anchors are left alone.
 
 Each render also writes a one-line stamp file. The page polls that stamp instead of reloading blindly, so it refreshes only when you actually preview something new — no periodic flicker on pages with images. Polling pauses while you scroll, while you print, and while the pointer is on the bar. Image dimensions are remembered per session, so a refresh does not shift the layout while images load.
 

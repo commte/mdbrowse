@@ -98,6 +98,10 @@ pandoc "$src" "${args[@]}"
 # そのままでは解決できない。ソースのあるディレクトリ基準の file:// に書き換える。
 # http(s) / data: / mailto: / 絶対パス / ページ内アンカーはそのまま残す
 src_dir="$(cd "$(dirname "$src")" && pwd)"
+# frontmatter の title を pandoc が拾うと本文の先頭に見出しが増えるので落とす。
+# ブラウザのタブ名には pagetitle を使っている
+perl -0pi -e 's#<header id="title-block-header">.*?</header>\n?##s' "$OUT"
+
 sed -E \
   -e 's#(src|href)="(https?://|data:|mailto:|file://|/|\#)#\1="@@KEEP@@\2#g' \
   -e "s#(src|href)=\"#\1=\"file://$src_dir/#g" \
