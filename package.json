@@ -1,5 +1,5 @@
 {
-  "name": "mdbrowse",
+  "name": "@commte/mdbrowse",
   "version": "0.1.0",
   "description": "Preview the Markdown file you are editing in a real browser, with your own CSS, from any editor that can run a shell command. No server, no port.",
   "bin": {
@@ -35,5 +35,8 @@
   "os": [
     "darwin",
     "linux"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -22,13 +22,13 @@
 ## インストール
 
 ```sh
-npm install -g mdbrowse
+npm install -g @commte/mdbrowse
 ```
 
 インストールせずに試す場合
 
 ```sh
-npx mdbrowse file.md
+npx @commte/mdbrowse file.md
 ```
 
 スタイルシートはパッケージに同梱されている。自分で編集したい場合は `~/.config/mdbrowse/head.html` に取り出す。以後はそちらが同梱版より優先される

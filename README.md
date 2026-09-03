@@ -22,13 +22,13 @@ Because the output path never changes, switching between files does not open new
 ## Install
 
 ```sh
-npm install -g mdbrowse
+npm install -g @commte/mdbrowse
 ```
 
 Or without installing anything:
 
 ```sh
-npx mdbrowse file.md
+npx @commte/mdbrowse file.md
 ```
 
 The stylesheet ships with the package. To customize it, copy it to `~/.config/mdbrowse/head.html` — that copy wins over the bundled one from then on:
