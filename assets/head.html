@@ -122,7 +122,7 @@
   }
   #mdtoc a:hover { background: var(--surface); color: var(--fg); text-decoration: none; }
   #mdtoc a.is-current { background: var(--surface); color: var(--fg); font-weight: 600; }
-  #mdtoc a[data-level="3"] { padding-left: 22px; font-size: 12.5px; }
+  #mdtoc a[data-level="2"] { padding-left: 22px; font-size: 12.5px; }
   /* 目次は幅に関係なく出す。その分の余白をページ右に確保する */
   html.has-toc { padding-right: 280px; }
 
@@ -214,17 +214,31 @@
     render();
 
     // 目次（右サイドバー）。見出しが少ないファイルでは出さない
-    var heads = [].slice.call(document.querySelectorAll('h2[id], h3[id]'));
+    // 見出しのレベルは文書によって違う（h2 起点とは限らない）。
+    // 拾えた中でいちばん浅いレベルを基準にして、その1つ下までを目次に出す
+    var heads = [].slice.call(document.querySelectorAll('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]'));
+    if (heads.length) {
+      var lv = function (h) { return +h.tagName.slice(1); };
+      var top = Math.min.apply(null, heads.map(lv));
+      // 最上位が1つだけなら文書のタイトル。目次には出さず、その下を基準にする
+      if (heads.filter(function (h) { return lv(h) === top; }).length === 1) {
+        heads = heads.filter(function (h) { return lv(h) > top; });
+        if (heads.length) top = Math.min.apply(null, heads.map(lv));
+      }
+      heads = heads.filter(function (h) { return lv(h) <= top + 1; });
+    }
     if (heads.length >= 3) {
+      var topLevel = Math.min.apply(null, heads.map(function (h) { return +h.tagName.slice(1); }));
       var toc = document.createElement('nav');
       toc.id = 'mdtoc';
       var links = {};
       heads.forEach(function (h) {
         var a = document.createElement('a');
         a.href = '#' + h.id;
-        a.textContent = h.textContent;
-        a.title = h.textContent;
-        a.dataset.level = (h.tagName === 'H3') ? '3' : '2';
+        var label = h.textContent.replace(/\s+/g, ' ').trim();
+        a.textContent = label;
+        a.title = label;
+        a.dataset.level = (+h.tagName.slice(1) === topLevel) ? '1' : '2';
         a.addEventListener('click', function (e) {
           e.preventDefault();
           h.scrollIntoView({ behavior: 'smooth', block: 'start' });
