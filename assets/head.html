@@ -145,6 +145,8 @@
   @page { margin: 18mm; }
   @media print {
     #mdbar, #mdtoc { display: none; }
+    /* 目次のために空けている右の余白は、紙では要らない */
+    html.has-toc { padding-right: 0; }
     /* テーマに関係なく紙はライトで刷る */
     :root, :root[data-theme="dark"] {
       --bg: #ffffff; --surface: #f6f8fa; --border: #d1d9e0;
@@ -156,6 +158,12 @@
     pre, blockquote, table, img, li { break-inside: avoid; }
     h1, h2, h3, h4 { break-after: avoid; }
     pre { white-space: pre-wrap; word-break: break-word; }
+    /* Shiki は暗い背景前提の色を要素に直接持つので、紙では黒字に戻す */
+    pre.shiki, pre.shiki span, pre code, pre code span {
+      background: transparent !important;
+      color: #1f2328 !important;
+    }
+    pre { border: 1px solid #d1d9e0; }
   }
 </style>
 <script>
