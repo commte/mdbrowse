@@ -27,8 +27,7 @@
     --inline-code-bg: rgba(129, 139, 152, .12);
   }
 
-  :root[data-theme="dark"],
-  :root[data-theme="auto"] {
+  :root[data-theme="dark"] {
     color-scheme: dark;
     --bg: #0d1117;
     --surface: #151b23;
@@ -38,15 +37,6 @@
     --link: #4493f8;
     --inline-code-bg: rgba(101, 108, 118, .2);
   }
-  @media (prefers-color-scheme: light) {
-    :root[data-theme="auto"] {
-      color-scheme: light;
-      --bg: #ffffff; --surface: #f6f8fa; --border: #d1d9e0;
-      --fg: #1f2328; --muted: #59636e; --link: #0969da;
-      --inline-code-bg: rgba(129, 139, 152, .12);
-    }
-  }
-
   /* ==== ここから下は組み方 ============================================ */
   html { background: var(--bg); }
   body {
@@ -94,20 +84,21 @@
 
   /* ==== 右上のバー ==================================================== */
   #mdbar {
-    position: fixed; top: 14px; right: 16px; z-index: 10;
+    position: fixed; top: 16px; right: 16px; z-index: 10;
     display: flex; align-items: center; gap: 2px;
-    padding: 5px; border-radius: 12px;
-    background: var(--surface); color: var(--muted);
-    font: 12px/1 var(--font-family);
-    opacity: .3; transition: opacity .15s;
+    padding: 4px; border-radius: 8px;
+    background: var(--surface); color: var(--fg);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(31, 35, 40, .12);
+    font: 500 12px/1 var(--font-family);
   }
-  #mdbar:hover, #mdbar:focus-within { opacity: 1; }
   #mdbar button {
     all: unset; cursor: pointer; user-select: none;
-    padding: 6px 9px; border-radius: 8px; color: var(--fg);
-    font: inherit; min-width: 1.6em; text-align: center;
+    padding: 6px 10px; border-radius: 6px; color: var(--fg);
+    font: inherit; min-width: 1.4em; text-align: center;
   }
   #mdbar button:hover { background: var(--bg); }
+  #mdbar button:active { background: var(--border); }
   @media print { #mdbar { display: none; } }
 </style>
 <script>
@@ -116,7 +107,7 @@
     var s = {};
     try { s = JSON.parse(localStorage.getItem('mdPreview') || '{}'); } catch (e) {}
     var r = document.documentElement;
-    r.dataset.theme = s.theme || 'light';
+    r.dataset.theme = (s.theme === 'dark') ? 'dark' : 'light';
     if (s.fontSize) r.style.setProperty('--font-size', s.fontSize + 'px');
     if (s.width) r.style.setProperty('--content-width', s.width + 'px');
     window.__mdSettings = s;
@@ -125,7 +116,7 @@
   addEventListener('DOMContentLoaded', function () {
     var r = document.documentElement;
     var s = window.__mdSettings || {};
-    var THEMES = ['light', 'dark', 'auto'];
+    var THEMES = ['light', 'dark'];
     var WIDTHS = [1012, 680, 820, 1280];
     var paused = false;
 
@@ -140,13 +131,13 @@
       '<button data-act="inc" title="文字を大きく">A+</button>' +
       '<button data-act="width" title="本文の幅">&#8596;</button>';
 
-    function render() { bar.querySelector('[data-act=theme]').textContent = s.theme || 'light'; }
+    function render() { bar.querySelector('[data-act=theme]').textContent = r.dataset.theme; }
 
     bar.addEventListener('click', function (e) {
       var act = e.target.dataset && e.target.dataset.act;
       if (!act) return;
       if (act === 'theme') {
-        s.theme = THEMES[(THEMES.indexOf(s.theme || 'light') + 1) % THEMES.length];
+        s.theme = (r.dataset.theme === 'dark') ? 'light' : 'dark';
         r.dataset.theme = s.theme;
       } else if (act === 'inc' || act === 'dec') {
         s.fontSize = Math.min(24, Math.max(12, fontSize() + (act === 'inc' ? 1 : -1)));

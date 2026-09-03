@@ -119,7 +119,7 @@ If your editor can run `md-preview /path/to/current/file.md`, it works.
 
 ## In-page controls
 
-The preview has a small bar in the top-right corner: theme (light / dark / auto), font size, and content width. Choices are stored in the browser, so they survive reloads and apply to every file you preview. Nothing is written to disk and no server is involved.
+The preview has a small bar in the top-right corner: theme (light / dark), font size, and content width. Choices are stored in the browser, so they survive reloads and apply to every file you preview. Nothing is written to disk and no server is involved.
 
 ## Styling
 
