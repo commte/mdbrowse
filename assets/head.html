@@ -25,6 +25,7 @@
   }
 
   /* ==== ここから下は組み方 ============================================ */
+  html { background: var(--bg); }
   body {
     max-width: var(--content-width);
     margin: 0 auto;
@@ -35,9 +36,11 @@
     color: var(--fg);
     background: var(--bg);
   }
-  h1, h2, h3, h4 { line-height: 1.4; margin: 2em 0 .6em; font-weight: 600; }
-  h1 { font-size: 1.9em; } h2 { font-size: 1.45em; } h3 { font-size: 1.2em; }
-  h1, h2 { border-bottom: 1px solid var(--border); padding-bottom: .3em; }
+  h1, h2, h3, h4 { line-height: 1.4; font-weight: 600; }
+  h1 { font-size: 1.9em; margin: 0 0 1.2em; }
+  h2 { font-size: 1.45em; margin: 2.6em 0 .8em; }
+  h3 { font-size: 1.2em; margin: 2.2em 0 .6em; }
+  h4 { margin: 2em 0 .6em; }
   a { color: var(--link); }
   code {
     font-family: var(--code-font-family); font-size: .88em; line-height: 1.6;
