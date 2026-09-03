@@ -143,6 +143,8 @@ editor shortcut → md-preview <file> → pandoc → /tmp/md-preview.html
                                   browser tab reloads itself when idle
 ```
 
+Relative paths in the source file (images, links to neighbouring files) are rewritten to absolute `file://` URLs during conversion, so images show up even though the HTML lives in `/tmp`. Absolute paths, `http(s)`, `data:`, `mailto:` and in-page anchors are left alone.
+
 The reload loop is what removes the need for a server. It pauses while you are scrolling and while the pointer is on the bar, so it does not interrupt reading. The page is static, so nothing is listening and nothing needs to be shut down.
 
 ## License

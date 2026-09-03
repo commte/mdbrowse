@@ -59,3 +59,13 @@ args=(--standalone --from gfm --variable "pagetitle=$(basename "$src")" --output
 [ -f "$HEAD" ] && args+=(--include-in-header "$HEAD")
 
 pandoc "$src" "${args[@]}"
+
+# 出力先が /tmp なので、元ファイルからの相対パス（画像・ローカルリンク）が
+# そのままでは解決できない。ソースのあるディレクトリ基準の file:// に書き換える。
+# http(s) / data: / mailto: / 絶対パス / ページ内アンカーはそのまま残す
+src_dir="$(cd "$(dirname "$src")" && pwd)"
+sed -E \
+  -e 's#(src|href)="(https?://|data:|mailto:|file://|/|\#)#\1="@@KEEP@@\2#g' \
+  -e "s#(src|href)=\"#\1=\"file://$src_dir/#g" \
+  -e 's#(src|href)="file://[^"]*@@KEEP@@#\1="#g' \
+  "$OUT" > "$OUT.tmp" && mv "$OUT.tmp" "$OUT"
