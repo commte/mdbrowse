@@ -117,9 +117,19 @@ Settings → Tools → External Tools → add `md-preview` with `$FilePath$` as 
 
 If your editor can run `md-preview /path/to/current/file.md`, it works.
 
+## In-page controls
+
+The preview has a small bar in the top-right corner: theme (light / dark / auto), font size, and content width. Choices are stored in the browser, so they survive reloads and apply to every file you preview. Nothing is written to disk and no server is involved.
+
 ## Styling
 
-Everything visual lives in `~/.config/md-browser-preview/head.html`: the CSS plus a small script that reloads the page once a second and restores the scroll position. Edit that one file and every preview follows. It ships with a GitHub-ish light theme and a dark variant that follows the OS setting.
+Everything visual lives in `~/.config/md-browser-preview/head.html`: a settings block at the top (layout values and a Tailwind `slate` palette), the rules that use them, and the script that runs the bar and the reload loop. Edit that one file and every preview follows. Values you change in the bar override these defaults per browser.
+
+`sample.md` in this repository exercises headings, lists, task lists, quotes, code blocks, tables and links — render it to check your styling:
+
+```sh
+md-preview sample.md
+```
 
 ## How it works
 
