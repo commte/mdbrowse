@@ -4,6 +4,8 @@ set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 bin_dir="${MD_PREVIEW_BIN_DIR:-$HOME/.local/bin}"
+force=0
+[ "${1:-}" = "--force" ] && force=1   # overwrite the installed stylesheet
 config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/md-browser-preview"
 
 command -v pandoc >/dev/null 2>&1 || {
@@ -14,8 +16,8 @@ command -v pandoc >/dev/null 2>&1 || {
 mkdir -p "$bin_dir" "$config_dir"
 install -m 755 "$here/bin/md-preview" "$bin_dir/md-preview"
 
-if [ -f "$config_dir/head.html" ]; then
-  echo "kept your existing stylesheet: $config_dir/head.html"
+if [ -f "$config_dir/head.html" ] && [ "$force" -eq 0 ]; then
+  echo "kept your existing stylesheet: $config_dir/head.html  (use --force to overwrite)"
 else
   install -m 644 "$here/assets/head.html" "$config_dir/head.html"
   echo "installed stylesheet: $config_dir/head.html"

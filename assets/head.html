@@ -1,32 +1,56 @@
 <style>
-  :root { color-scheme: light dark; }
+  /* ==== 設定 ===========================================================
+     ここだけ触ればプレビュー全体の見た目が変わる。
+     色は Tailwind CSS の slate パレット。数字を隣の段階に振ると濃さが変わる
+     50 #f8fafc / 100 #f1f5f9 / 200 #e2e8f0 / 300 #cbd5e1 / 400 #94a3b8
+     500 #64748b / 600 #475569 / 700 #334155 / 800 #1e293b / 900 #0f172a
+     ==================================================================== */
+  :root {
+    color-scheme: light;
+
+    /* レイアウト */
+    --content-width: 780px;
+    --font-size: 16px;
+    --line-height: 1.85;
+    --font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    --code-font-family: "SF Mono", Menlo, monospace;
+
+    /* 色 */
+    --bg: #f8fafc;        /* slate-50   本文の背景 */
+    --surface: #f1f5f9;   /* slate-100  コードブロック・表の見出し */
+    --border: #e2e8f0;    /* slate-200  罫線 */
+    --fg: #1e293b;        /* slate-800  本文 */
+    --muted: #64748b;     /* slate-500  引用 */
+    --link: #2563eb;      /* blue-600   リンク */
+  }
+
+  /* ==== ここから下は組み方 ============================================ */
   body {
-    max-width: 780px; margin: 0 auto; padding: 40px 24px 120px;
-    font: 16px/1.85 -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
-    color: #1f2328; background: #fff;
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 40px 24px 120px;
+    font-size: var(--font-size);
+    line-height: var(--line-height);
+    font-family: var(--font-family);
+    color: var(--fg);
+    background: var(--bg);
   }
   h1, h2, h3, h4 { line-height: 1.4; margin: 2em 0 .6em; font-weight: 600; }
   h1 { font-size: 1.9em; } h2 { font-size: 1.45em; } h3 { font-size: 1.2em; }
-  h1, h2 { border-bottom: 1px solid #d8dee4; padding-bottom: .3em; }
-  a { color: #0969da; }
-  code { font: .88em/1.6 "SF Mono", Menlo, monospace; background: #eff1f3; padding: .15em .35em; border-radius: 4px; }
-  pre { background: #f6f8fa; padding: 16px; border-radius: 8px; overflow-x: auto; }
-  pre code { background: none; padding: 0; }
-  blockquote { margin: 1em 0; padding: .2em 1em; color: #59636e; border-left: 3px solid #d8dee4; }
-  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-  th, td { border: 1px solid #d8dee4; padding: 8px 12px; text-align: left; }
-  th { background: #f6f8fa; }
-  img { max-width: 100%; }
-  hr { border: none; border-top: 1px solid #d8dee4; margin: 2em 0; }
-  @media (prefers-color-scheme: dark) {
-    body { color: #e6edf3; background: #0d1117; }
-    h1, h2, hr, th, td { border-color: #30363d; }
-    a { color: #4493f8; }
-    code { background: #21262d; }
-    pre { background: #161b22; }
-    th { background: #161b22; }
-    blockquote { color: #9198a1; border-left-color: #30363d; }
+  h1, h2 { border-bottom: 1px solid var(--border); padding-bottom: .3em; }
+  a { color: var(--link); }
+  code {
+    font-family: var(--code-font-family); font-size: .88em; line-height: 1.6;
+    background: var(--surface); padding: .15em .35em; border-radius: 4px;
   }
+  pre { background: var(--surface); padding: 16px; border-radius: 8px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  blockquote { margin: 1em 0; padding: .2em 1em; color: var(--muted); border-left: 3px solid var(--border); }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+  th { background: var(--surface); }
+  img { max-width: 100%; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 </style>
 <script>
   // 別のファイルで再生成されたら拾うためのポーリング。スクロール位置は保つ
