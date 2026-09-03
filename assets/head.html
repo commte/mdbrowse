@@ -193,7 +193,7 @@
         s.theme = (r.dataset.theme === 'dark') ? 'light' : 'dark';
         r.dataset.theme = s.theme;
       } else if (act === 'inc' || act === 'dec') {
-        s.fontSize = Math.min(24, Math.max(12, fontSize() + (act === 'inc' ? 1 : -1)));
+        s.fontSize = Math.min(24, Math.max(16, fontSize() + (act === 'inc' ? 1 : -1)));
         r.style.setProperty('--font-size', s.fontSize + 'px');
       } else if (act === 'toc') {
         s.toc = (s.toc === false);
