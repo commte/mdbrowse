@@ -139,13 +139,16 @@ md-preview sample.md
 
 ```
 editor shortcut → md-preview <file> → pandoc → /tmp/md-preview.html
+                                             → /tmp/md-preview-stamp.js
                                                       ↑
-                                  browser tab reloads itself when idle
+                              browser polls the stamp, reloads only on change
 ```
 
 Relative paths in the source file (images, links to neighbouring files) are rewritten to absolute `file://` URLs during conversion, so images show up even though the HTML lives in `/tmp`. Absolute paths, `http(s)`, `data:`, `mailto:` and in-page anchors are left alone.
 
-The reload loop is what removes the need for a server. It pauses while you are scrolling and while the pointer is on the bar, so it does not interrupt reading. The page is static, so nothing is listening and nothing needs to be shut down.
+Each render also writes a one-line stamp file. The page polls that stamp instead of reloading blindly, so it refreshes only when you actually preview something new — no periodic flicker on pages with images. Polling pauses while you scroll, while you print, and while the pointer is on the bar. Image dimensions are remembered per session, so a refresh does not shift the layout while images load.
+
+The page is static, so nothing is listening and nothing needs to be shut down.
 
 ## License
 

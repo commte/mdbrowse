@@ -40,6 +40,7 @@ case "${1:-}" in
   --path) echo "$OUT"; exit 0 ;;
   --open)
     [ -f "$OUT" ] || printf '<!doctype html><meta charset="utf-8"><p>No preview yet.' > "$OUT"
+    [ -f "${OUT%.html}-stamp.js" ] || printf 'window.__mdStamp="0";\n' > "${OUT%.html}-stamp.js"
     open_url; exit 0 ;;
   "") usage; exit 2 ;;
 esac
@@ -69,3 +70,6 @@ sed -E \
   -e "s#(src|href)=\"#\1=\"file://$src_dir/#g" \
   -e 's#(src|href)="file://[^"]*@@KEEP@@#\1="#g' \
   "$OUT" > "$OUT.tmp" && mv "$OUT.tmp" "$OUT"
+
+# 更新の目印。ブラウザはこれを見て、中身が変わったときだけ読み直す
+printf 'window.__mdStamp="%s";\n' "$(date +%s)-$RANDOM" > "${OUT%.html}-stamp.js"
