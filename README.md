@@ -133,6 +133,8 @@ Everything visual lives in `~/.config/md-browser-preview/head.html`: a settings 
 md-preview sample.md
 ```
 
+![Code blocks and tables](docs/preview-code.png)
+
 ## How it works
 
 ```

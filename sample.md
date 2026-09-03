@@ -80,7 +80,7 @@ pandoc input.md --standalone --from gfm --variable "pagetitle=input.md" --includ
 |---|---|---|
 | `MD_PREVIEW_OUT` | `/tmp/md-preview.html` | 出力先の HTML |
 | `MD_PREVIEW_HEAD` | `~/.config/md-browser-preview/head.html` | スタイルとリロード用スクリプト |
-| `--content-width` | `780px` | 本文の幅 |
+| `--content-width` | `1012px` | 本文の幅 |
 
 ## リンク
 
