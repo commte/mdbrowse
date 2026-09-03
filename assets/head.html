@@ -1,45 +1,49 @@
 <style>
   /* ==== 設定 ===========================================================
-     ここが既定値。ブラウザ右上のバーで変えた分は、その人のブラウザに保存されて
-     この既定値を上書きする。色は Tailwind CSS の slate パレット
-     50 #f8fafc / 100 #f1f5f9 / 200 #e2e8f0 / 300 #cbd5e1 / 400 #94a3b8
-     500 #64748b / 600 #475569 / 700 #334155 / 800 #1e293b / 900 #0f172a
+     GitHub（Primer）の配色とタイポグラフィに合わせてある。
+     ライト  bg #ffffff / canvas-subtle #f6f8fa / border #d1d9e0 / fg #1f2328
+             muted #59636e / link #0969da
+     ダーク  bg #0d1117 / canvas-subtle #151b23 / border #3d444d / fg #e6edf3
+             muted #9198a1 / link #4493f8
      ==================================================================== */
   :root {
     color-scheme: light;
 
-    /* レイアウト */
-    --content-width: 780px;
+    /* レイアウト（GitHub の本文と同じ 16px / 1.5、幅 1012px） */
+    --content-width: 1012px;
     --font-size: 16px;
-    --line-height: 1.85;
-    --font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
-    --code-font-family: "SF Mono", Menlo, monospace;
+    --line-height: 1.5;
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+                   Helvetica, Arial, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    --code-font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
     /* 色（ライト） */
-    --bg: #f8fafc;        /* slate-50  */
-    --surface: #f1f5f9;   /* slate-100 */
-    --border: #e2e8f0;    /* slate-200 */
-    --fg: #1e293b;        /* slate-800 */
-    --muted: #64748b;     /* slate-500 */
-    --link: #2563eb;      /* blue-600  */
+    --bg: #ffffff;
+    --surface: #f6f8fa;
+    --border: #d1d9e0;
+    --fg: #1f2328;
+    --muted: #59636e;
+    --link: #0969da;
+    --inline-code-bg: rgba(129, 139, 152, .12);
   }
 
-  /* 色（ダーク）。バーで dark を選んだとき、および auto + OS がダークのとき */
   :root[data-theme="dark"],
   :root[data-theme="auto"] {
     color-scheme: dark;
-    --bg: #0f172a;        /* slate-900 */
-    --surface: #1e293b;   /* slate-800 */
-    --border: #334155;    /* slate-700 */
-    --fg: #e2e8f0;        /* slate-200 */
-    --muted: #94a3b8;     /* slate-400 */
-    --link: #60a5fa;      /* blue-400  */
+    --bg: #0d1117;
+    --surface: #151b23;
+    --border: #3d444d;
+    --fg: #e6edf3;
+    --muted: #9198a1;
+    --link: #4493f8;
+    --inline-code-bg: rgba(101, 108, 118, .2);
   }
   @media (prefers-color-scheme: light) {
     :root[data-theme="auto"] {
       color-scheme: light;
-      --bg: #f8fafc; --surface: #f1f5f9; --border: #e2e8f0;
-      --fg: #1e293b; --muted: #64748b; --link: #2563eb;
+      --bg: #ffffff; --surface: #f6f8fa; --border: #d1d9e0;
+      --fg: #1f2328; --muted: #59636e; --link: #0969da;
+      --inline-code-bg: rgba(129, 139, 152, .12);
     }
   }
 
@@ -48,34 +52,45 @@
   body {
     max-width: var(--content-width);
     margin: 0 auto;
-    padding: 40px 24px 120px;
+    padding: 32px 32px 160px;
     font-size: var(--font-size);
     line-height: var(--line-height);
     font-family: var(--font-family);
     color: var(--fg);
     background: var(--bg);
+    word-wrap: break-word;
   }
-  h1, h2, h3, h4 { line-height: 1.4; font-weight: 600; }
-  h1 { font-size: 1.9em; margin: 0 0 1.2em; }
-  h2 { font-size: 1.45em; margin: 2.6em 0 .8em; }
-  h3 { font-size: 1.2em; margin: 2.2em 0 .6em; }
-  h4 { margin: 2em 0 .6em; }
-  a { color: var(--link); }
+  h1, h2, h3, h4, h5, h6 { line-height: 1.25; font-weight: 600; margin: 24px 0 16px; }
+  h1 { font-size: 2em; }
+  h2 { font-size: 1.5em; }
+  h3 { font-size: 1.25em; }
+  h4 { font-size: 1em; }
+  h1:first-child { margin-top: 0; }
+  p, ul, ol, blockquote, table, pre { margin: 0 0 16px; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
   code {
-    font-family: var(--code-font-family); font-size: .88em; line-height: 1.6;
-    background: var(--surface); padding: .15em .35em; border-radius: 4px;
+    font-family: var(--code-font-family); font-size: 85%;
+    background: var(--inline-code-bg); padding: .2em .4em; border-radius: 6px;
   }
-  pre { background: var(--surface); padding: 16px; border-radius: 8px; overflow-x: auto; }
-  pre code { background: none; padding: 0; }
-  blockquote { margin: 1em 0; padding: .2em 1em; color: var(--muted); border-left: 3px solid var(--border); }
-  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
-  th { background: var(--surface); }
+  pre {
+    background: var(--surface); padding: 16px; border-radius: 6px;
+    overflow-x: auto; font-size: 85%; line-height: 1.45;
+  }
+  pre code { background: none; padding: 0; font-size: 100%; }
+  blockquote {
+    padding: 0 1em; color: var(--muted);
+    border-left: .25em solid var(--border);
+  }
+  table { border-collapse: collapse; display: block; width: max-content; max-width: 100%; overflow: auto; }
+  th, td { border: 1px solid var(--border); padding: 6px 13px; text-align: left; }
+  th { font-weight: 600; }
+  tr:nth-child(2n) { background: var(--surface); }
   img { max-width: 100%; }
-  hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
-  ul, ol { padding-left: 1.4em; }
-  li { margin: .3em 0; }
-  li input[type="checkbox"] { margin-right: .4em; }
+  hr { height: .25em; padding: 0; margin: 24px 0; background: var(--border); border: 0; }
+  ul, ol { padding-left: 2em; }
+  li + li { margin-top: .25em; }
+  li input[type="checkbox"] { margin: 0 .2em .25em -1.4em; vertical-align: middle; }
 
   /* ==== 右上のバー ==================================================== */
   #mdbar {
@@ -111,7 +126,7 @@
     var r = document.documentElement;
     var s = window.__mdSettings || {};
     var THEMES = ['light', 'dark', 'auto'];
-    var WIDTHS = [640, 780, 960, 1200];
+    var WIDTHS = [1012, 680, 820, 1280];
     var paused = false;
 
     function save() { try { localStorage.setItem('mdPreview', JSON.stringify(s)); } catch (e) {} }
