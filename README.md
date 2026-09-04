@@ -59,12 +59,22 @@ mdb
 
 That opens the preview tab and starts a small background process. Save any Markdown file from here on and it shows up in that tab, whichever project it lives in. `mdb --stop` ends it; `mdb` starts it again.
 
+The process is gone after a logout or a reboot. On macOS you can have it come back on its own:
+
+```sh
+mdb --install-agent
+```
+
+That writes a LaunchAgent under `~/Library/LaunchAgents` and nothing else, so the sync is running from the moment you log in. `mdb --uninstall-agent` removes it. macOS lists it under Login Items as an unidentified developer — the script is not code-signed.
+
 ## Usage
 
 ```sh
 mdb              # open the tab and keep it in sync
 mdb --stop       # stop the background sync
 mdb --status     # show what is being previewed
+mdb --install-agent    # start the sync at every login (macOS)
+mdb --uninstall-agent  # remove it
 mdb file.md      # render one file, once
 mdb -w file.md   # follow one file in the foreground (Ctrl-C to stop)
 mdb --path       # print the output HTML path

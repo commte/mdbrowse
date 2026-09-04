@@ -184,10 +184,17 @@
     var THEMES = ['light', 'dark'];
     var WIDTHS = [800, 680, 960, 1200];
     var printing = false;
-    addEventListener('beforeprint', function () { printing = true; });
-    addEventListener('afterprint', function () { printing = false; });
-    // 印刷がキャンセルされて afterprint が来ない場合に、止まったままにならないようにする
-    addEventListener('visibilitychange', function () { if (!document.hidden) printing = false; });
+    var printTimer = null;
+    addEventListener('beforeprint', function () {
+      printing = true;
+      // afterprint が来ないブラウザや、途中で閉じられた場合に止まったままにならないようにする
+      clearTimeout(printTimer);
+      printTimer = setTimeout(function () { printing = false; }, 60000);
+    });
+    addEventListener('afterprint', function () {
+      printing = false;
+      clearTimeout(printTimer);
+    });
 
     function save() { try { localStorage.setItem('mdbrowse', JSON.stringify(s)); } catch (e) {} }
     function fontSize() { return s.fontSize || parseInt(getComputedStyle(r).getPropertyValue('--font-size')) || 16; }
@@ -257,7 +264,8 @@
       }
       heads = heads.filter(function (h) { return lv(h) <= top + 1; });
     }
-    if (heads.length >= 3) {
+    try {
+    if (heads.length >= 3 && typeof IntersectionObserver === 'function') {
       var topLevel = Math.min.apply(null, heads.map(function (h) { return +h.tagName.slice(1); }));
       var toc = document.createElement('nav');
       toc.id = 'mdtoc';
@@ -294,6 +302,7 @@
       }, { rootMargin: '0px 0px -75% 0px' });
       heads.forEach(function (h) { io.observe(h); });
     }
+    } catch (e) { /* 目次が組めなくても、更新の監視は動かす */ }
 
     // スクロール位置はブラウザ標準の復元に任せる（手で保存するとカクつく）
     var lastScroll = 0;
@@ -318,6 +327,7 @@
     var stampUrl = location.pathname.replace(/\.html$/, '-stamp.js');
     var known = null;
     function checkStamp() {
+      if (printing) return;
       var el = document.createElement('script');
       el.src = stampUrl + '?t=' + Date.now();
       el.onload = function () {
@@ -335,7 +345,8 @@
     addEventListener('focus', function () { checkStamp(); });
     // バーを操作している間は再読み込みを止める。状態を持たずにその場で見る
     // （持つと、バーの上にポインタを置いたままウィンドウを離れたときに止まったままになる）
-    var hoverable = !matchMedia || matchMedia('(hover: hover)').matches;
+    var hoverable = typeof window.matchMedia !== 'function'
+      || window.matchMedia('(hover: hover)').matches;
     setInterval(function () {
       if (printing || (hoverable && bar.matches(':hover'))) return;
       if (Date.now() - lastScroll < 900) return;

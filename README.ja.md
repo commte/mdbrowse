@@ -59,12 +59,22 @@ mdb
 
 プレビュー用のタブが開き、小さな背景プロセスが動きだす。以後どの Markdown を保存しても、どのプロジェクトのものでも、そのタブに出る。止めるときは `mdb --stop`、再開はまた `mdb`
 
+ログアウトや再起動で消える。macOS なら、勝手に戻ってくるようにもできる
+
+```sh
+mdb --install-agent
+```
+
+`~/Library/LaunchAgents` に LaunchAgent を1枚置くだけで、ログインした時点から追従が動いている。外すときは `mdb --uninstall-agent`。macOS のログイン項目には「開発元を識別できない項目」として出る。スクリプトに署名していないため
+
 ## 使い方
 
 ```sh
 mdb              # タブを開いて、以後ずっと追従させる
 mdb --stop       # 背景の追従を止める
 mdb --status     # いま何が出ているかを表示する
+mdb --install-agent    # ログイン時に自動で始めるようにする（macOS）
+mdb --uninstall-agent  # それを外す
 mdb file.md      # そのファイルを1回だけ変換する
 mdb -w file.md   # 1つのファイルだけを前面で監視する（Ctrl-C で終了）
 mdb --path       # 出力先の HTML のパスを表示する
