@@ -1,0 +1,39 @@
+name: publish
+
+# バージョンタグ（v0.2.0 など）を push したら npm に公開する。
+# 認証は npm の Trusted Publishing（OIDC）。トークンは保存しない
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Trusted Publishing は npm 11.5.1 以降
+      - run: npm install -g npm@latest
+
+      - name: タグと package.json の版が一致しているか
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "tag $tag != package.json $pkg" >&2
+            exit 1
+          fi
+
+      - run: npm ci --omit=dev
+
+      - run: npm publish
