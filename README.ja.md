@@ -186,6 +186,14 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 mdb sample.md
 ```
 
+## テスト
+
+```sh
+npm test
+```
+
+`test/cli.sh` はコマンド側を動かす。変換、相対パスの書き換え、異常系、監視、背景プロセスまで通す。必要なのは pandoc だけ。`test/browser.test.js` は `assets/head.html` からスクリプトを取り出して jsdom で動かし、更新の検知、目次の判定、バーの設定を見る。CI では macOS と Linux の両方で回していて、通らないものは公開されない
+
 ## 仕組み
 
 ```

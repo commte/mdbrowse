@@ -15,6 +15,11 @@
     "README.ja.md",
     "LICENSE"
   ],
+  "scripts": {
+    "test": "bash test/cli.sh && vitest run",
+    "test:cli": "bash test/cli.sh",
+    "test:browser": "vitest run"
+  },
   "keywords": [
     "markdown",
     "preview",
@@ -43,5 +48,9 @@
   },
   "dependencies": {
     "shiki": "^4.4.3"
+  },
+  "devDependencies": {
+    "jsdom": "^30.0.1",
+    "vitest": "^5.0.0"
   }
 }

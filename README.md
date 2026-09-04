@@ -186,6 +186,14 @@ Everything else visual lives in `~/.config/mdbrowse/head.html`: a settings block
 mdb sample.md
 ```
 
+## Tests
+
+```sh
+npm test
+```
+
+`test/cli.sh` drives the command itself — rendering, path rewriting, exit codes, watching, the background sync — and needs nothing but pandoc. `test/browser.test.js` pulls the script out of `assets/head.html` and runs it under jsdom, covering the reload loop, the table of contents rules and the settings bar. Both run on macOS and Linux in CI, and a release only goes out if they pass.
+
 ## How it works
 
 ```

@@ -12,7 +12,12 @@ permissions:
   id-token: write
 
 jobs:
+  # テストが通っていない版は出さない
+  test:
+    uses: ./.github/workflows/test.yml
+
   publish:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
