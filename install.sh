@@ -70,5 +70,5 @@ case ":$PATH:" in
 esac
 
 echo
-echo "Next: open the preview tab once, then bind a key in your editor (see README)."
-echo "  mdb --open"
+echo "Next: start it on a file and keep it running."
+echo "  mdb -w -o your-file.md"

@@ -63,12 +63,23 @@ Once is enough: from then on every render swaps the contents of that tab. You on
 ## Usage
 
 ```sh
-mdb file.md   # render (overwrites the output HTML)
-mdb --open    # open the preview tab
-mdb --path    # print the output HTML path
+mdb -w file.md   # render, then re-render on every save
+mdb file.md      # render once
+mdb --open       # open the preview tab
+mdb --path       # print the output HTML path
 ```
 
-Nothing watches the filesystem. Saving a file does not update the preview by itself — the tab changes when `mdb <file>` runs, so bind it to a key or to save in your editor.
+### Follow a file while you write
+
+Start it once in a terminal and leave it there:
+
+```sh
+mdb -w -o file.md
+```
+
+That opens the preview tab and re-renders the file every time you save it, from any editor, with no editor configuration at all. `Ctrl-C` stops it. Editing the stylesheet re-renders too, which is handy while you tune it.
+
+Without `-w` the command renders once and exits. Nothing is left running, and nothing watches your files — the tab changes only when the command runs. That is the mode to use from an editor shortcut.
 
 | Variable | Default | |
 |---|---|---|
@@ -84,6 +95,8 @@ The table of contents is built from the headings of the current file and follows
 ![Dark theme](docs/preview-dark.png)
 
 ## Editor setup
+
+`mdb -w` needs no editor support. Set this up instead if you would rather press a key than keep a terminal open.
 
 ### Zed
 
@@ -169,7 +182,7 @@ mdb sample.md
 ## How it works
 
 ```
-editor shortcut → mdb <file> → pandoc → /tmp/mdbrowse.html
+mdb -w <file> (or an editor shortcut) → pandoc → /tmp/mdbrowse.html
                                              → /tmp/mdbrowse-stamp.js
                                                       ↑
                               browser polls the stamp, reloads only on change
@@ -178,6 +191,8 @@ editor shortcut → mdb <file> → pandoc → /tmp/mdbrowse.html
 YAML front matter is consumed rather than printed: the file's own `title` does not become a second heading above your document. Relative paths in the source file (images, links to neighbouring files) are rewritten to absolute `file://` URLs during conversion, so images show up even though the HTML lives in `/tmp`. Only attributes of tags such as `img` and `a` are touched, so `src="foo.png"` written in your prose stays as you typed it. Absolute paths, anything with a scheme (`http(s)`, `data:`, `mailto:`), protocol-relative URLs and in-page anchors are left alone, and `&`, `#` or spaces in the path do not break the result.
 
 Each render also writes a one-line stamp file. The page polls that stamp instead of reloading blindly, so it refreshes only when you actually preview something new — no periodic flicker on pages with images. Polling pauses while you scroll, while you print, and while the pointer is on the bar. Image dimensions are remembered per session, so a refresh does not shift the layout while images load.
+
+Watching is the same render in a loop: `mdb -w` compares the file's timestamp and size once a second and renders again when they change. It is a plain foreground process, not a server — no port, nothing to shut down but `Ctrl-C`.
 
 The page is static, so nothing is listening and nothing needs to be shut down.
 

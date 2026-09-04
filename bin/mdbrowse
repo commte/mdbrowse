@@ -3,7 +3,7 @@
 # browser tab can stay open and just swap its contents.
 set -euo pipefail
 
-VERSION="0.1.1"
+VERSION="0.2.0"
 PROG="$(basename "$0")"
 OUT="${MDBROWSE_OUT:-/tmp/mdbrowse.html}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mdbrowse"
@@ -36,11 +36,17 @@ usage() {
 mdb — render Markdown to a fixed HTML file for browser preview
 
 Usage:
-  mdb <file.md>   render the file (overwrites the output HTML)
-  mdb --open      open the preview tab in the default browser
-  mdb --eject     copy the bundled stylesheet into your config directory
-  mdb --path      print the output HTML path
-  mdb --version   print the version
+  mdb <file.md>          render once (overwrites the output HTML)
+  mdb -w <file.md>       render, then re-render every time the file is saved
+  mdb -w -o <file.md>    the same, and open the preview tab first
+  mdb --open             open the preview tab in the default browser
+  mdb --eject            copy the bundled stylesheet into your config directory
+  mdb --path             print the output HTML path
+  mdb --version          print the version
+
+Options:
+  -w, --watch   keep running and re-render on every save (Ctrl-C to stop)
+  -o, --open    open the preview tab as well
 
 The same command is also installed under its full name, `mdbrowse`.
 
@@ -61,6 +67,12 @@ open_url() {
   fi
 }
 
+open_tab() {
+  [ -f "$OUT" ] || printf '<!doctype html><meta charset="utf-8"><p>No preview yet.' > "$OUT"
+  [ -f "${OUT%.html}-stamp.js" ] || printf 'window.__mdbrowseStamp="0";\n' > "${OUT%.html}-stamp.js"
+  open_url
+}
+
 case "${1:-}" in
   -h|--help) usage; exit 0 ;;
   -v|--version) echo "mdbrowse $VERSION"; exit 0 ;;
@@ -74,14 +86,28 @@ case "${1:-}" in
     cp "$BUNDLED_HEAD" "$CONFIG_DIR/head.html"
     echo "$CONFIG_DIR/head.html"
     exit 0 ;;
-  --open)
-    [ -f "$OUT" ] || printf '<!doctype html><meta charset="utf-8"><p>No preview yet.' > "$OUT"
-    [ -f "${OUT%.html}-stamp.js" ] || printf 'window.__mdbrowseStamp="0";\n' > "${OUT%.html}-stamp.js"
-    open_url; exit 0 ;;
   "") usage; exit 2 ;;
 esac
 
-src="$1"
+# 残りは「オプション＋ファイル」。ファイルを伴わない --open はタブを開くだけ
+watch=0
+do_open=0
+src=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -w|--watch) watch=1 ;;
+    -o|--open) do_open=1 ;;
+    --) shift; [ $# -gt 0 ] && src="$1"; break ;;
+    -*) echo "$PROG: unknown option: $1" >&2; exit 2 ;;
+    *) src="$1" ;;
+  esac
+  shift
+done
+
+if [ -z "$src" ]; then
+  if [ "$do_open" -eq 1 ]; then open_tab; exit 0; fi
+  usage; exit 2
+fi
 
 if ! command -v pandoc >/dev/null 2>&1; then
   echo "$PROG: pandoc not found. Install it first (macOS: brew install pandoc)" >&2
@@ -108,26 +134,27 @@ else
   if [ "$use_shiki" -eq 1 ]; then hl=(--no-highlight); else hl=(--highlight-style breezedark); fi
 fi
 
-args=(--standalone --from gfm "${hl[@]}" --variable "pagetitle=$(basename "$src")" --output "$OUT")
-[ -f "$HEAD" ] && args+=(--include-in-header "$HEAD")
+render() {
+  local args=(--standalone --from gfm "${hl[@]}" --variable "pagetitle=$(basename "$src")" --output "$OUT")
+  [ -f "$HEAD" ] && args+=(--include-in-header "$HEAD")
 
-pandoc "$src" "${args[@]}"
+  pandoc "$src" "${args[@]}"
 
-# コードブロックを Shiki で色付けし直す。失敗しても変換自体は成立させる
-if [ "$use_shiki" -eq 1 ]; then
-  node "$HIGHLIGHTER" "$OUT" || true
-fi
+  # コードブロックを Shiki で色付けし直す。失敗しても変換自体は成立させる
+  if [ "$use_shiki" -eq 1 ]; then
+    node "$HIGHLIGHTER" "$OUT" || true
+  fi
 
-# frontmatter の title を pandoc が拾うと本文の先頭に見出しが増えるので落とす。
-# ブラウザのタブ名には pagetitle を使っている
-perl -0pi -e 's#<header id="title-block-header">.*?</header>\n?##s' "$OUT"
+  # frontmatter の title を pandoc が拾うと本文の先頭に見出しが増えるので落とす。
+  # ブラウザのタブ名には pagetitle を使っている
+  perl -0pi -e 's#<header id="title-block-header">.*?</header>\n?##s' "$OUT"
 
-# 出力先が /tmp なので、元ファイルからの相対パス（画像・ローカルリンク）が
-# そのままでは解決できない。ソースのあるディレクトリ基準の file:// に書き換える。
-# 書き換えるのはタグの属性だけ。本文中の src="..." のようなインラインコードは触らない。
-# スキーム付き（http(s) data: mailto: など）／絶対パス／ページ内アンカーはそのまま残す
-src_dir="$(cd "$(dirname "$src")" && pwd)"
-MDBROWSE_SRC_DIR="$src_dir" perl -0pi -e '
+  # 出力先が /tmp なので、元ファイルからの相対パス（画像・ローカルリンク）が
+  # そのままでは解決できない。ソースのあるディレクトリ基準の file:// に書き換える。
+  # 書き換えるのはタグの属性だけ。本文中の src="..." のようなインラインコードは触らない。
+  # スキーム付き（http(s) data: mailto: など）／絶対パス／ページ内アンカーはそのまま残す
+  local src_dir="$(cd "$(dirname "$src")" && pwd)"
+  MDBROWSE_SRC_DIR="$src_dir" perl -0pi -e '
   BEGIN {
     $base = $ENV{MDBROWSE_SRC_DIR};
     # file:// の中で意味を持つ文字は先に逃がす（% は必ず最初）
@@ -144,5 +171,30 @@ MDBROWSE_SRC_DIR="$src_dir" perl -0pi -e '
   }gse;
 ' "$OUT"
 
-# 更新の目印。ブラウザはこれを見て、中身が変わったときだけ読み直す
-printf 'window.__mdbrowseStamp="%s";\n' "$(date +%s)-$RANDOM" > "${OUT%.html}-stamp.js"
+  # 更新の目印。ブラウザはこれを見て、中身が変わったときだけ読み直す
+  printf 'window.__mdbrowseStamp="%s";\n' "$(date +%s)-$RANDOM" > "${OUT%.html}-stamp.js"
+}
+
+# ファイルの更新時刻とサイズ。同じ秒内の2回目の保存も拾えるようにサイズも見る
+if stat -f %m . >/dev/null 2>&1; then
+  fingerprint() { stat -f '%m %z' "$1" 2>/dev/null; }
+else
+  fingerprint() { stat -c '%Y %s' "$1" 2>/dev/null; }
+fi
+
+[ "$do_open" -eq 1 ] && open_tab
+
+render
+
+# 監視。保存のたびに変換し直す。スタイルシートを直したときも作り直す
+if [ "$watch" -eq 1 ]; then
+  echo "$PROG: watching $src (Ctrl-C to stop)" >&2
+  last="$(fingerprint "$src") $(fingerprint "$HEAD")"
+  while sleep 1; do
+    now="$(fingerprint "$src") $(fingerprint "$HEAD")"
+    [ "$now" = "$last" ] && continue
+    last="$now"
+    [ -f "$src" ] || continue
+    render || echo "$PROG: render failed" >&2
+  done
+fi

@@ -1,6 +1,6 @@
 {
   "name": "@commte/mdbrowse",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Preview the Markdown file you are editing in a real browser, with your own CSS, from any editor that can run a shell command. No server, no port.",
   "bin": {
     "mdbrowse": "bin/mdbrowse",
