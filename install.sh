@@ -17,6 +17,7 @@ mkdir -p "$bin_dir" "$config_dir"
 # コピーではなくリンクにする。スクリプトが自分の場所からリポジトリ内の
 # lib/highlight.mjs と node_modules を辿れるようにするため
 ln -sfn "$here/bin/mdbrowse" "$bin_dir/mdbrowse"
+ln -sfn "$here/bin/mdbrowse" "$bin_dir/mdb"   # 短い別名
 
 if [ -f "$config_dir/head.html" ] && [ "$force" -eq 0 ]; then
   echo "kept your existing stylesheet: $config_dir/head.html  (use --force to overwrite)"
@@ -25,7 +26,7 @@ else
   echo "installed stylesheet: $config_dir/head.html"
 fi
 
-echo "installed: $bin_dir/mdbrowse"
+echo "installed: $bin_dir/mdbrowse (short alias: $bin_dir/mdb)"
 
 # Zed task file — never overwrite an existing one
 zed_dir="${XDG_CONFIG_HOME:-$HOME/.config}/zed"

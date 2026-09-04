@@ -64,6 +64,8 @@ mdbrowse --open    # プレビュー用のタブを開く
 mdbrowse --path    # 出力先の HTML のパスを表示する
 ```
 
+手で打つとき用に、同じコマンドが `mdb` という名前でも入る
+
 | 環境変数 | 既定値 | |
 |---|---|---|
 | `MDBROWSE_OUT` | `/tmp/mdbrowse.html` | 出力先の HTML |

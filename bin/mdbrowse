@@ -3,7 +3,7 @@
 # browser tab can stay open and just swap its contents.
 set -euo pipefail
 
-VERSION="0.1.0"
+VERSION="0.1.1"
 OUT="${MDBROWSE_OUT:-/tmp/mdbrowse.html}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mdbrowse"
 
@@ -40,6 +40,8 @@ Usage:
   mdbrowse --eject     copy the bundled stylesheet into your config directory
   mdbrowse --path      print the output HTML path
   mdbrowse --version   print the version
+
+The command is also installed under the shorter name `mdb`.
 
 Environment:
   MDBROWSE_OUT    output HTML path   (default: /tmp/mdbrowse.html)
@@ -110,10 +112,6 @@ args=(--standalone --from gfm "${hl[@]}" --variable "pagetitle=$(basename "$src"
 
 pandoc "$src" "${args[@]}"
 
-# 出力先が /tmp なので、元ファイルからの相対パス（画像・ローカルリンク）が
-# そのままでは解決できない。ソースのあるディレクトリ基準の file:// に書き換える。
-# http(s) / data: / mailto: / 絶対パス / ページ内アンカーはそのまま残す
-src_dir="$(cd "$(dirname "$src")" && pwd)"
 # コードブロックを Shiki で色付けし直す。失敗しても変換自体は成立させる
 if [ "$use_shiki" -eq 1 ]; then
   node "$HIGHLIGHTER" "$OUT" || true
@@ -123,11 +121,27 @@ fi
 # ブラウザのタブ名には pagetitle を使っている
 perl -0pi -e 's#<header id="title-block-header">.*?</header>\n?##s' "$OUT"
 
-sed -E \
-  -e 's#(src|href)="(https?://|data:|mailto:|file://|/|\#)#\1="@@KEEP@@\2#g' \
-  -e "s#(src|href)=\"#\1=\"file://$src_dir/#g" \
-  -e 's#(src|href)="file://[^"]*@@KEEP@@#\1="#g' \
-  "$OUT" > "$OUT.tmp" && mv "$OUT.tmp" "$OUT"
+# 出力先が /tmp なので、元ファイルからの相対パス（画像・ローカルリンク）が
+# そのままでは解決できない。ソースのあるディレクトリ基準の file:// に書き換える。
+# 書き換えるのはタグの属性だけ。本文中の src="..." のようなインラインコードは触らない。
+# スキーム付き（http(s) data: mailto: など）／絶対パス／ページ内アンカーはそのまま残す
+src_dir="$(cd "$(dirname "$src")" && pwd)"
+MDBROWSE_SRC_DIR="$src_dir" perl -0pi -e '
+  BEGIN {
+    $base = $ENV{MDBROWSE_SRC_DIR};
+    # file:// の中で意味を持つ文字は先に逃がす（% は必ず最初）
+    $base =~ s/%/%25/g;
+    $base =~ s/#/%23/g;
+    $base =~ s/\?/%3F/g;
+    $base =~ s/ /%20/g;
+  }
+  s{(<(?:img|a|source|video|audio|embed|object|track)\b)([^>]*?)(/?>)}{
+    my ($tag, $attrs, $close) = ($1, $2, $3);
+    $attrs =~ s{((?:src|href|poster|data)=")(?![a-zA-Z][a-zA-Z0-9+.\-]*:|//|/|\#|")([^"]*)"}
+               {$1 . "file://" . $base . "/" . $2 . "\""}ge;
+    $tag . $attrs . $close;
+  }gse;
+' "$OUT"
 
 # 更新の目印。ブラウザはこれを見て、中身が変わったときだけ読み直す
 printf 'window.__mdbrowseStamp="%s";\n' "$(date +%s)-$RANDOM" > "${OUT%.html}-stamp.js"

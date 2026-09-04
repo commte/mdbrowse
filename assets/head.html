@@ -222,7 +222,7 @@
         s.toc = (s.toc === false);
         applyToc();
       } else if (act === 'width') {
-        var i = WIDTHS.indexOf(s.width || 780);
+        var i = WIDTHS.indexOf(s.width || WIDTHS[0]);
         s.width = WIDTHS[(i + 1) % WIDTHS.length];
         r.style.setProperty('--content-width', s.width + 'px');
       }

@@ -64,6 +64,8 @@ mdbrowse --open    # open the preview tab
 mdbrowse --path    # print the output HTML path
 ```
 
+The same command is installed as `mdb`, for when you type it by hand.
+
 | Variable | Default | |
 |---|---|---|
 | `MDBROWSE_OUT` | `/tmp/mdbrowse.html` | output HTML path |
