@@ -70,6 +70,11 @@ mdb -w file.md   # 1つのファイルだけを前面で監視する（Ctrl-C �
 mdb --path       # 出力先の HTML のパスを表示する
 ```
 
+| 環境変数 | 既定値 | |
+|---|---|---|
+| `MDBROWSE_OUT` | `/tmp/mdbrowse.html` | 出力先の HTML |
+| `MDBROWSE_HEAD` | `~/.config/mdbrowse/head.html` | スタイルとブラウザ側のスクリプト |
+
 ### どうやって保存したファイルを見つけているか
 
 Spotlight（`mdfind`）に「直近に保存された Markdown」を尋ねて、それを変換している。ディスクを歩き回らないので軽い。隠しディレクトリ、`node_modules`、`~/Library` の下は無視する。Spotlight が使えない環境では、`mdb` を実行したディレクトリを見る動きに落ちる

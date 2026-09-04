@@ -70,6 +70,11 @@ mdb -w file.md   # follow one file in the foreground (Ctrl-C to stop)
 mdb --path       # print the output HTML path
 ```
 
+| Variable | Default | |
+|---|---|---|
+| `MDBROWSE_OUT` | `/tmp/mdbrowse.html` | output HTML path |
+| `MDBROWSE_HEAD` | `~/.config/mdbrowse/head.html` | stylesheet and browser script |
+
 ### How the sync finds your file
 
 It asks Spotlight (`mdfind`) which Markdown file was saved most recently, twice a second-and-a-bit, and renders that one. Walking your disk is never involved, so it stays cheap. Files under hidden directories, `node_modules` and `~/Library` are ignored. Without Spotlight it falls back to watching the directory you started `mdb` in.

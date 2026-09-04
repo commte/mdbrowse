@@ -186,6 +186,8 @@
     var printing = false;
     addEventListener('beforeprint', function () { printing = true; });
     addEventListener('afterprint', function () { printing = false; });
+    // 印刷がキャンセルされて afterprint が来ない場合に、止まったままにならないようにする
+    addEventListener('visibilitychange', function () { if (!document.hidden) printing = false; });
 
     function save() { try { localStorage.setItem('mdbrowse', JSON.stringify(s)); } catch (e) {} }
     function fontSize() { return s.fontSize || parseInt(getComputedStyle(r).getPropertyValue('--font-size')) || 16; }
@@ -333,8 +335,9 @@
     addEventListener('focus', function () { checkStamp(); });
     // バーを操作している間は再読み込みを止める。状態を持たずにその場で見る
     // （持つと、バーの上にポインタを置いたままウィンドウを離れたときに止まったままになる）
+    var hoverable = !matchMedia || matchMedia('(hover: hover)').matches;
     setInterval(function () {
-      if (printing || bar.matches(':hover')) return;
+      if (printing || (hoverable && bar.matches(':hover'))) return;
       if (Date.now() - lastScroll < 900) return;
       checkStamp();
     }, 1000);
