@@ -46,7 +46,7 @@ cd mdbrowse
 ./install.sh
 ```
 
-This installs `mdbrowse` into `~/.local/bin` and the stylesheet into `~/.config/mdbrowse/head.html`. Your stylesheet is never overwritten on reinstall; pass `--force` when you do want the shipped one back.
+This installs `mdbrowse` (and the shorter `mdb`) into `~/.local/bin`, and the stylesheet into `~/.config/mdbrowse/head.html`. Your stylesheet is never overwritten on reinstall; pass `--force` when you do want the shipped one back.
 
 </details>
 
@@ -55,6 +55,8 @@ Open the preview tab once and leave it open:
 ```sh
 mdbrowse --open
 ```
+
+Once is enough: from then on every render swaps the contents of that tab. You only open it again after closing the tab or restarting the browser.
 
 ## Usage
 
@@ -65,6 +67,8 @@ mdbrowse --path    # print the output HTML path
 ```
 
 The same command is installed as `mdb`, for when you type it by hand.
+
+Nothing watches the filesystem. Saving a file does not update the preview by itself — the tab changes when `mdbrowse <file>` runs, so bind it to a key or to save in your editor.
 
 | Variable | Default | |
 |---|---|---|
@@ -171,7 +175,7 @@ editor shortcut → mdbrowse <file> → pandoc → /tmp/mdbrowse.html
                               browser polls the stamp, reloads only on change
 ```
 
-YAML front matter is consumed rather than printed: the file's own `title` does not become a second heading above your document. Relative paths in the source file (images, links to neighbouring files) are rewritten to absolute `file://` URLs during conversion, so images show up even though the HTML lives in `/tmp`. Absolute paths, `http(s)`, `data:`, `mailto:` and in-page anchors are left alone.
+YAML front matter is consumed rather than printed: the file's own `title` does not become a second heading above your document. Relative paths in the source file (images, links to neighbouring files) are rewritten to absolute `file://` URLs during conversion, so images show up even though the HTML lives in `/tmp`. Only attributes of tags such as `img` and `a` are touched, so `src="foo.png"` written in your prose stays as you typed it. Absolute paths, anything with a scheme (`http(s)`, `data:`, `mailto:`), protocol-relative URLs and in-page anchors are left alone, and `&`, `#` or spaces in the path do not break the result.
 
 Each render also writes a one-line stamp file. The page polls that stamp instead of reloading blindly, so it refreshes only when you actually preview something new — no periodic flicker on pages with images. Polling pauses while you scroll, while you print, and while the pointer is on the bar. Image dimensions are remembered per session, so a refresh does not shift the layout while images load.
 
