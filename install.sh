@@ -13,6 +13,13 @@ command -v pandoc >/dev/null 2>&1 || {
   exit 127
 }
 
+# Shiki は npm の依存なので、リポジトリを clone しただけでは入っていない。
+# node と npm があるときだけ、実行用の依存を入れる（テスト用のものは入れない）
+if [ ! -d "$here/node_modules/shiki" ] && command -v npm >/dev/null 2>&1; then
+  echo "installing the Shiki dependency..."
+  ( cd "$here" && npm install --omit=dev --silent ) ||     echo "note: npm install failed. Code blocks will fall back to pandoc's highlighting." >&2
+fi
+
 mkdir -p "$bin_dir" "$config_dir"
 # コピーではなくリンクにする。スクリプトが自分の場所からリポジトリ内の
 # lib/highlight.mjs と node_modules を辿れるようにするため

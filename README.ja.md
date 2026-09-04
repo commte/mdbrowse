@@ -47,7 +47,7 @@ cd mdbrowse
 ./install.sh
 ```
 
-`mdb`（と長いほうの `mdbrowse`）が `~/.local/bin` に、スタイルシートが `~/.config/mdbrowse/head.html` に入る。再インストールしても自分で編集したスタイルシートは上書きされない。配布時の状態に戻したいときは `--force` を付ける
+`install.sh` は、実行に要る依存（Shiki）が無ければ npm で入れてから、`mdb`（と長いほうの `mdbrowse`）を `~/.local/bin` に、スタイルシートを `~/.config/mdbrowse/head.html` に置く。再インストールしても自分で編集したスタイルシートは上書きされない。配布時の状態に戻したいときは `--force` を付ける
 
 </details>
 

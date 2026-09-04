@@ -3,3 +3,4 @@
 CLAUDE.md
 *.tgz
 private
+node_modules/

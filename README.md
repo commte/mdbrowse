@@ -47,7 +47,7 @@ cd mdbrowse
 ./install.sh
 ```
 
-This installs `mdb` (and the longer `mdbrowse`) into `~/.local/bin`, and the stylesheet into `~/.config/mdbrowse/head.html`. Your stylesheet is never overwritten on reinstall; pass `--force` when you do want the shipped one back.
+`install.sh` pulls in the one runtime dependency (Shiki) with npm if it is not there yet, then installs `mdb` (and the longer `mdbrowse`) into `~/.local/bin` and the stylesheet into `~/.config/mdbrowse/head.html`. Your stylesheet is never overwritten on reinstall; pass `--force` when you do want the shipped one back.
 
 </details>
 
