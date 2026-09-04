@@ -3,7 +3,7 @@
 # browser tab can stay open and just swap its contents.
 set -euo pipefail
 
-VERSION="0.3.0"
+VERSION="0.3.1"
 PROG="$(basename "$0")"
 OUT="${MDBROWSE_OUT:-/tmp/mdbrowse.html}"
 case "$OUT" in
@@ -459,16 +459,18 @@ if [ "$daemon" -eq 1 ]; then
   # 変換の失敗は画面に出ないので、ログに残す
   log() { printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >> "$LOGFILE"; }
 
-  # Spotlight を使えない場合は木を歩く。大きな木では間隔を伸ばす
-  scan_gap=2
+  # 表示中のファイルは 0.25 秒ごとに見る。1周 = 0.25 秒
+  TICK=0.25
+  # Spotlight への問い合わせは 2 秒ごと（8周に1回）
+  scan_gap=8
   if [ "$use_spotlight" -eq 0 ]; then
     t0="$(perl -MTime::HiRes=time -e 'printf "%d", time*1000')"
     newest_md "$root" >/dev/null
     t1="$(perl -MTime::HiRes=time -e 'printf "%d", time*1000')"
-    scan_gap=$(( ( (t1 - t0) * 5 + 999) / 1000 ))
-    [ "$scan_gap" -lt 2 ] && scan_gap=2
-    [ "$scan_gap" -gt 10 ] && scan_gap=10
-    log "watching $root every ${scan_gap}s (no Spotlight)"
+    scan_gap=$(( ( (t1 - t0) * 5 + 249) / 250 ))
+    [ "$scan_gap" -lt 8 ] && scan_gap=8
+    [ "$scan_gap" -gt 40 ] && scan_gap=40
+    log "watching $root every $(( scan_gap / 4 ))s (no Spotlight)"
   fi
 
   src="$(pick)"
@@ -476,7 +478,7 @@ if [ "$daemon" -eq 1 ]; then
   last="$src $(fingerprint "$src") $(fingerprint "$HEAD")"
   # 開いているファイルの保存は毎秒見る。別ファイルへの切り替えの検出は2秒ごと
   tick=0
-  while sleep 1; do
+  while sleep "$TICK"; do
     tick=$(( tick + 1 ))
     if [ $(( tick % scan_gap )) -eq 0 ]; then
       cand="$(pick)"
@@ -508,7 +510,7 @@ render
 if [ "$watch" -eq 1 ]; then
   # ディレクトリを見る場合、木が大きいと走査が重い。1回の走査時間から
   # 待ち時間を決めて、CPU を食い潰さないようにする
-  interval=1
+  interval=0.25
   if [ -n "$root" ]; then
     t0="$(perl -MTime::HiRes=time -e 'printf "%d", time*1000')"
     newest_md "$root" >/dev/null
