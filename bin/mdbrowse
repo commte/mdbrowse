@@ -36,17 +36,22 @@ usage() {
 mdb — render Markdown to a fixed HTML file for browser preview
 
 Usage:
-  mdb <file.md>          render once (overwrites the output HTML)
-  mdb -w <file.md>       render, then re-render every time the file is saved
-  mdb -w -o <file.md>    the same, and open the preview tab first
-  mdb --open             open the preview tab in the default browser
+  mdb                    open the preview tab and keep it in sync from then on
+  mdb <file.md>          render that file once
+  mdb --stop             stop the background sync
+  mdb --status           show what is being previewed
+  mdb -w <file|dir>      watch in the foreground instead (Ctrl-C to stop)
   mdb --eject            copy the bundled stylesheet into your config directory
   mdb --path             print the output HTML path
   mdb --version          print the version
 
-Options:
-  -w, --watch   keep running and re-render on every save (Ctrl-C to stop)
-  -o, --open    open the preview tab as well
+With no arguments, mdb opens the preview tab and starts a small background
+process. From then on, whatever Markdown file you save — in any project, from
+any editor — shows up in that tab. Nothing else to set up. `mdb --stop` ends it.
+
+Finding the file you just saved uses Spotlight (mdfind). Files under hidden
+directories, node_modules and ~/Library are ignored. Without Spotlight, mdb
+falls back to watching the directory you started it in.
 
 The same command is also installed under its full name, `mdbrowse`.
 
@@ -73,10 +78,51 @@ open_tab() {
   open_url
 }
 
+PIDFILE="${OUT%.html}-sync.pid"
+
+running_pid() {
+  [ -f "$PIDFILE" ] || return 1
+  local pid; pid="$(cat "$PIDFILE" 2>/dev/null)"
+  [ -n "$pid" ] || return 1
+  kill -0 "$pid" 2>/dev/null || return 1
+  echo "$pid"
+}
+
+stop_sync() {
+  local pid
+  if pid="$(running_pid)"; then
+    kill "$pid" 2>/dev/null || true
+    rm -f "$PIDFILE"
+    echo "$PROG: stopped"
+  else
+    rm -f "$PIDFILE"
+    echo "$PROG: not running"
+  fi
+}
+
+start_sync() {
+  if running_pid >/dev/null; then
+    echo "$PROG: already in sync (mdb --stop to end it)"
+    return 0
+  fi
+  nohup "$0" --sync-daemon "$PWD" >/dev/null 2>&1 &
+  echo $! > "$PIDFILE"
+  echo "$PROG: in sync — save any .md and it shows up here (mdb --stop to end it)"
+}
+
 case "${1:-}" in
   -h|--help) usage; exit 0 ;;
   -v|--version) echo "mdbrowse $VERSION"; exit 0 ;;
   --path) echo "$OUT"; exit 0 ;;
+  --stop) stop_sync; exit 0 ;;
+  --status)
+    if running_pid >/dev/null; then
+      echo "$PROG: in sync (pid $(running_pid))"
+    else
+      echo "$PROG: not running"
+    fi
+    [ -f "$OUT" ] && echo "showing: $(grep -o '<title>[^<]*' "$OUT" 2>/dev/null | sed 's/<title>//')"
+    exit 0 ;;
   --eject)
     mkdir -p "$CONFIG_DIR"
     if [ -f "$CONFIG_DIR/head.html" ] && [ "${2:-}" != "--force" ]; then
@@ -86,17 +132,19 @@ case "${1:-}" in
     cp "$BUNDLED_HEAD" "$CONFIG_DIR/head.html"
     echo "$CONFIG_DIR/head.html"
     exit 0 ;;
-  "") usage; exit 2 ;;
 esac
 
-# 残りは「オプション＋ファイル」。ファイルを伴わない --open はタブを開くだけ
+# 残りは「オプション＋ファイル」
 watch=0
 do_open=0
+daemon=0
+sync_cwd=""
 src=""
 while [ $# -gt 0 ]; do
   case "$1" in
     -w|--watch) watch=1 ;;
     -o|--open) do_open=1 ;;
+    --sync-daemon) daemon=1; shift; sync_cwd="${1:-$PWD}" ;;
     --) shift; [ $# -gt 0 ] && src="$1"; break ;;
     -*) echo "$PROG: unknown option: $1" >&2; exit 2 ;;
     *) src="$1" ;;
@@ -104,16 +152,34 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-if [ -z "$src" ]; then
-  if [ "$do_open" -eq 1 ]; then open_tab; exit 0; fi
-  usage; exit 2
+# 引数なし（または --open だけ）が既定の使い方。タブを開いて、以後は勝手に追従する
+if [ -z "$src" ] && [ "$watch" -eq 0 ] && [ "$daemon" -eq 0 ]; then
+  if ! command -v pandoc >/dev/null 2>&1; then
+    echo "$PROG: pandoc not found. Install it first (macOS: brew install pandoc)" >&2
+    exit 127
+  fi
+  open_tab
+  start_sync
+  exit 0
 fi
+
+# -w だけならカレントディレクトリを見る
+[ -z "$src" ] && [ "$watch" -eq 1 ] && src="."
 
 if ! command -v pandoc >/dev/null 2>&1; then
   echo "$PROG: pandoc not found. Install it first (macOS: brew install pandoc)" >&2
   exit 127
 fi
-if [ ! -f "$src" ]; then
+root=""
+if [ "$daemon" -eq 1 ]; then
+  :
+elif [ -d "$src" ]; then
+  if [ "$watch" -eq 0 ]; then
+    echo "$PROG: $src is a directory (pass -w to watch it)" >&2
+    exit 2
+  fi
+  root="$src"
+elif [ ! -f "$src" ]; then
   echo "$PROG: no such file: $src" >&2
   exit 66
 fi
@@ -178,8 +244,63 @@ render() {
 # ファイルの更新時刻とサイズ。同じ秒内の2回目の保存も拾えるようにサイズも見る
 if stat -f %m . >/dev/null 2>&1; then
   fingerprint() { stat -f '%m %z' "$1" 2>/dev/null; }
+  stat_time_name() { xargs -0 stat -f '%m %N' 2>/dev/null; }
 else
   fingerprint() { stat -c '%Y %s' "$1" 2>/dev/null; }
+  stat_time_name() { xargs -0 stat -c '%Y %n' 2>/dev/null; }
+fi
+
+# ディレクトリの中でいちばん最近保存された Markdown
+newest_md() {
+  find "$1" \( -name .git -o -name node_modules -o -name .venv \) -prune \
+       -o -type f -name '*.md' -print0 2>/dev/null \
+    | stat_time_name | sort -rn | head -1 | cut -d' ' -f2-
+}
+
+# Spotlight で「家じゅうで直近に保存された Markdown」を引く。木を歩かないので速い
+newest_global() {
+  mdfind 'kMDItemFSName == "*.md"c && kMDItemContentModificationDate >= $time.now(-1800)' 2>/dev/null \
+    | grep -v -e '/\.' -e '/node_modules/' -e '/Library/' \
+    | tr '\n' '\0' | stat_time_name | sort -rn | head -1 | cut -d' ' -f2-
+}
+
+# 背景で動く本体。保存された Markdown を追いかけて変換し続ける
+if [ "$daemon" -eq 1 ]; then
+  trap 'rm -f "$PIDFILE"' EXIT
+  use_spotlight=0
+  command -v mdfind >/dev/null 2>&1 && use_spotlight=1
+  [ "$use_spotlight" -eq 0 ] && root="$sync_cwd"
+
+  pick() {
+    if [ "$use_spotlight" -eq 1 ]; then newest_global; else newest_md "$root"; fi
+  }
+
+  src="$(pick)"
+  if [ -n "$src" ] && [ -f "$src" ]; then render || true; fi
+  last="$src $(fingerprint "$src") $(fingerprint "$HEAD")"
+  # 開いているファイルの保存は毎秒見る。別ファイルへの切り替えの検出は2秒ごと
+  tick=0
+  while sleep 1; do
+    tick=$(( tick + 1 ))
+    if [ $(( tick % 2 )) -eq 0 ]; then
+      cand="$(pick)"
+      [ -n "$cand" ] && src="$cand"
+    fi
+    [ -f "$src" ] || continue
+    now="$src $(fingerprint "$src") $(fingerprint "$HEAD")"
+    [ "$now" = "$last" ] && continue
+    last="$now"
+    render || true
+  done
+  exit 0
+fi
+
+if [ -n "$root" ]; then
+  src="$(newest_md "$root")"
+  if [ -z "$src" ]; then
+    echo "$PROG: no Markdown file under $root" >&2
+    exit 66
+  fi
 fi
 
 [ "$do_open" -eq 1 ] && open_tab
@@ -188,10 +309,32 @@ render
 
 # 監視。保存のたびに変換し直す。スタイルシートを直したときも作り直す
 if [ "$watch" -eq 1 ]; then
-  echo "$PROG: watching $src (Ctrl-C to stop)" >&2
-  last="$(fingerprint "$src") $(fingerprint "$HEAD")"
-  while sleep 1; do
-    now="$(fingerprint "$src") $(fingerprint "$HEAD")"
+  # ディレクトリを見る場合、木が大きいと走査が重い。1回の走査時間から
+  # 待ち時間を決めて、CPU を食い潰さないようにする
+  interval=1
+  if [ -n "$root" ]; then
+    t0="$(perl -MTime::HiRes=time -e 'printf "%d", time*1000')"
+    newest_md "$root" >/dev/null
+    t1="$(perl -MTime::HiRes=time -e 'printf "%d", time*1000')"
+    scan=$(( t1 - t0 ))
+    interval=$(( (scan * 5 + 999) / 1000 ))
+    [ "$interval" -lt 1 ] && interval=1
+    [ "$interval" -gt 10 ] && interval=10
+    if [ "$interval" -gt 1 ]; then
+      echo "$PROG: watching $root — save any .md under it (checking every ${interval}s; a smaller directory reacts faster) (Ctrl-C to stop)" >&2
+    else
+      echo "$PROG: watching $root — save any .md under it (Ctrl-C to stop)" >&2
+    fi
+  else
+    echo "$PROG: watching $src (Ctrl-C to stop)" >&2
+  fi
+  last="$src $(fingerprint "$src") $(fingerprint "$HEAD")"
+  while sleep "$interval"; do
+    if [ -n "$root" ]; then
+      cand="$(newest_md "$root")"
+      [ -n "$cand" ] && src="$cand"
+    fi
+    now="$src $(fingerprint "$src") $(fingerprint "$HEAD")"
     [ "$now" = "$last" ] && continue
     last="$now"
     [ -f "$src" ] || continue

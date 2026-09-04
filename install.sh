@@ -70,5 +70,5 @@ case ":$PATH:" in
 esac
 
 echo
-echo "Next: start it on a file and keep it running."
-echo "  mdb -w -o your-file.md"
+echo "Next: run it once. It opens the tab and follows whatever you save."
+echo "  mdb"

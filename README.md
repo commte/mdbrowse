@@ -2,22 +2,21 @@ English | [日本語](README.ja.md)
 
 # mdbrowse
 
-Preview the Markdown file you are editing in a real browser, with your own CSS, from any editor that can run a shell command.
+Preview the Markdown file you are editing in a real browser, with your own CSS, from any editor.
 
-No server. No port. No daemon. One shortcut renders the current file to a fixed HTML path, and the browser tab you already have open picks it up.
+Run `mdb` once. It opens a tab, and from then on whatever Markdown file you save — in any project, from any editor — appears in it. No configuration, no server, no port.
 
 ![Light theme](docs/preview-light.png)
 
 ## Why
 
-Editors render Markdown previews inside their own window and give you little control over the result. Server-based previewers give you control but ask you to keep a process and a port around. This does neither: it is a shell script on top of `pandoc`, plus one HTML file holding the styles.
+Editors render Markdown previews inside their own window and give you little control over the result. Server-based previewers give you control but ask you to keep a process and a port around. This is a shell script on top of `pandoc` plus one HTML file holding the styles: it renders to a fixed path and the tab reloads itself.
 
 Because the output path never changes, switching between files does not open new tabs. The tab you already have simply shows the new file.
 
 ## Requirements
 
 - [pandoc](https://pandoc.org/) — macOS: `brew install pandoc`, Debian/Ubuntu: `apt install pandoc`
-- An editor that can run a shell command with the path of the active file
 
 ## Install
 
@@ -52,39 +51,32 @@ This installs `mdb` (and the longer `mdbrowse`) into `~/.local/bin`, and the sty
 
 </details>
 
-Open the preview tab once and leave it open:
+Then run it once:
 
 ```sh
-mdb --open
+mdb
 ```
 
-Once is enough: from then on every render swaps the contents of that tab. You only open it again after closing the tab or restarting the browser.
+That opens the preview tab and starts a small background process. Save any Markdown file from here on and it shows up in that tab, whichever project it lives in. `mdb --stop` ends it; `mdb` starts it again.
 
 ## Usage
 
 ```sh
-mdb -w file.md   # render, then re-render on every save
-mdb file.md      # render once
-mdb --open       # open the preview tab
+mdb              # open the tab and keep it in sync
+mdb --stop       # stop the background sync
+mdb --status     # show what is being previewed
+mdb file.md      # render one file, once
+mdb -w file.md   # follow one file in the foreground (Ctrl-C to stop)
 mdb --path       # print the output HTML path
 ```
 
-### Follow a file while you write
+### How the sync finds your file
 
-Start it once in a terminal and leave it there:
+It asks Spotlight (`mdfind`) which Markdown file was saved most recently, twice a second-and-a-bit, and renders that one. Walking your disk is never involved, so it stays cheap. Files under hidden directories, `node_modules` and `~/Library` are ignored. Without Spotlight it falls back to watching the directory you started `mdb` in.
 
-```sh
-mdb -w -o file.md
-```
+The file you are editing right now is checked every second directly, so repeated saves show up immediately; moving to a different file takes a couple of seconds longer, while Spotlight notices it.
 
-That opens the preview tab and re-renders the file every time you save it, from any editor, with no editor configuration at all. `Ctrl-C` stops it. Editing the stylesheet re-renders too, which is handy while you tune it.
-
-Without `-w` the command renders once and exits. Nothing is left running, and nothing watches your files — the tab changes only when the command runs. That is the mode to use from an editor shortcut.
-
-| Variable | Default | |
-|---|---|---|
-| `MDBROWSE_OUT` | `/tmp/mdbrowse.html` | output HTML path |
-| `MDBROWSE_HEAD` | `~/.config/mdbrowse/head.html` | stylesheet and browser script |
+Because it follows whatever was saved last, another program writing a Markdown file can pull the preview away. If you want the tab pinned to one file, run `mdb -w that-file.md` instead — that watches only what you name, and stops when you press `Ctrl-C`.
 
 ## In-page controls
 
@@ -96,7 +88,7 @@ The table of contents is built from the headings of the current file and follows
 
 ## Editor setup
 
-`mdb -w` needs no editor support. Set this up instead if you would rather press a key than keep a terminal open.
+None of this is needed — `mdb` already follows what you save. Set one of these up if you would rather press a key and have nothing running in the background. They all call `mdb <file>`, the render-once mode.
 
 ### Zed
 
@@ -182,7 +174,7 @@ mdb sample.md
 ## How it works
 
 ```
-mdb -w <file> (or an editor shortcut) → pandoc → /tmp/mdbrowse.html
+save a file → mdb (or an editor shortcut) → pandoc → /tmp/mdbrowse.html
                                              → /tmp/mdbrowse-stamp.js
                                                       ↑
                               browser polls the stamp, reloads only on change
@@ -192,7 +184,7 @@ YAML front matter is consumed rather than printed: the file's own `title` does n
 
 Each render also writes a one-line stamp file. The page polls that stamp instead of reloading blindly, so it refreshes only when you actually preview something new — no periodic flicker on pages with images. Polling pauses while you scroll, while you print, and while the pointer is on the bar. Image dimensions are remembered per session, so a refresh does not shift the layout while images load.
 
-Watching is the same render in a loop: `mdb -w` compares the file's timestamp and size once a second and renders again when they change. It is a plain foreground process, not a server — no port, nothing to shut down but `Ctrl-C`.
+Watching is the same render in a loop. The background process compares the file's timestamp and size once a second, asks Spotlight for the newest Markdown file every other second, and renders again when either changes. It listens on nothing and has no port; `mdb --stop` ends it, and it is a single shell process you can see in `ps`.
 
 The page is static, so nothing is listening and nothing needs to be shut down.
 
