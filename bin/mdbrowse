@@ -3,7 +3,7 @@
 # browser tab can stay open and just swap its contents.
 set -euo pipefail
 
-VERSION="0.3.1"
+VERSION="0.3.2"
 PROG="$(basename "$0")"
 OUT="${MDBROWSE_OUT:-/tmp/mdbrowse.html}"
 case "$OUT" in
@@ -141,6 +141,17 @@ stop_sync() {
   if [ "$stopped" -eq 1 ]; then echo "$PROG: stopped"; else echo "$PROG: not running"; fi
 }
 
+# ログイン時の自動起動があることを、初回だけ1行で知らせる。
+# 毎回出すと邪魔になるので、一度出したら記録して黙る
+hint_agent() {
+  [ "$(uname -s)" = "Darwin" ] || return 0
+  agent_installed && return 0
+  [ -f "$RUNTIME_DIR/agent-hint" ] && return 0
+  mkdir -p "$RUNTIME_DIR" 2>/dev/null || true
+  : > "$RUNTIME_DIR/agent-hint" 2>/dev/null || true
+  echo "$PROG: it stops at logout — 'mdb --install-agent' starts it at every login"
+}
+
 start_sync() {
   if running_pid >/dev/null; then
     echo "$PROG: already in sync (mdb --stop to end it)"
@@ -156,6 +167,7 @@ start_sync() {
   done
   if running_pid >/dev/null; then
     echo "$PROG: in sync — save any .md and it shows up here (mdb --stop to end it)"
+    hint_agent
   else
     echo "$PROG: could not start the background sync (see $LOGFILE)" >&2
     return 1

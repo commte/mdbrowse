@@ -189,6 +189,18 @@ sleep 2
 check "該当なしでも生き続ける" 1 "$(daemons)"
 "$MDB" --stop >/dev/null 2>&1
 
+# ログイン時の自動起動の案内は初回だけ
+if [ "$(uname -s)" = "Darwin" ]; then
+  export HOME="$work/home"; mkdir -p "$HOME"
+  rm -f "$TMPDIR/mdbrowse-$(id -u)/agent-hint"
+  "$MDB" --stop >/dev/null 2>&1
+  first="$("$MDB" 2>&1)"
+  second="$("$MDB" 2>&1)"
+  "$MDB" --stop >/dev/null 2>&1
+  contains "初回は自動起動を案内する" "$first" "install-agent"
+  missing "2回目は案内しない" "$second" "install-agent"
+fi
+
 echo
 echo "そのほか"
 

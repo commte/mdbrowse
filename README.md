@@ -59,7 +59,7 @@ mdb
 
 That opens the preview tab and starts a small background process. Save any Markdown file from here on and it shows up in that tab, whichever project it lives in. `mdb --stop` ends it; `mdb` starts it again.
 
-The process is gone after a logout or a reboot. On macOS you can have it come back on its own:
+The process is gone after a logout or a reboot, so otherwise you run `mdb` again next time. On macOS you can have it come back on its own:
 
 ```sh
 mdb --install-agent
