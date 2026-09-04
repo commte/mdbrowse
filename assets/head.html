@@ -56,7 +56,7 @@
   body {
     max-width: var(--content-width);
     margin: 0 auto;
-    padding: 32px 32px 160px;
+    padding: 80px 32px 160px;
     font-size: var(--font-size);
     line-height: var(--line-height);
     font-family: var(--font-family);
@@ -79,6 +79,8 @@
   h1:first-child { margin-top: 0; }
   p, ul, ol, blockquote, table, pre { margin: 0 0 16px; }
   a { color: var(--link); text-decoration: none; }
+  /* 訪問済みも同じ色にする。指定しないと環境によっては本文色に落ちて見分けが付かない */
+  a:visited { color: var(--link); }
   a:hover { text-decoration: underline; }
   code {
     font-family: var(--code-font-family); font-size: 85%;

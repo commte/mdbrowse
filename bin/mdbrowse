@@ -3,7 +3,7 @@
 # browser tab can stay open and just swap its contents.
 set -euo pipefail
 
-VERSION="0.3.2"
+VERSION="0.3.3"
 PROG="$(basename "$0")"
 OUT="${MDBROWSE_OUT:-/tmp/mdbrowse.html}"
 case "$OUT" in
