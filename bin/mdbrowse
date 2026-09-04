@@ -4,6 +4,7 @@
 set -euo pipefail
 
 VERSION="0.1.1"
+PROG="$(basename "$0")"
 OUT="${MDBROWSE_OUT:-/tmp/mdbrowse.html}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mdbrowse"
 
@@ -32,16 +33,16 @@ fi
 
 usage() {
   cat <<'USAGE'
-mdbrowse — render Markdown to a fixed HTML file for browser preview
+mdb — render Markdown to a fixed HTML file for browser preview
 
 Usage:
-  mdbrowse <file.md>   render the file (overwrites the output HTML)
-  mdbrowse --open      open the preview tab in the default browser
-  mdbrowse --eject     copy the bundled stylesheet into your config directory
-  mdbrowse --path      print the output HTML path
-  mdbrowse --version   print the version
+  mdb <file.md>   render the file (overwrites the output HTML)
+  mdb --open      open the preview tab in the default browser
+  mdb --eject     copy the bundled stylesheet into your config directory
+  mdb --path      print the output HTML path
+  mdb --version   print the version
 
-The command is also installed under the shorter name `mdb`.
+The same command is also installed under its full name, `mdbrowse`.
 
 Environment:
   MDBROWSE_OUT    output HTML path   (default: /tmp/mdbrowse.html)
@@ -67,7 +68,7 @@ case "${1:-}" in
   --eject)
     mkdir -p "$CONFIG_DIR"
     if [ -f "$CONFIG_DIR/head.html" ] && [ "${2:-}" != "--force" ]; then
-      echo "mdbrowse: $CONFIG_DIR/head.html already exists (pass --force to overwrite)" >&2
+      echo "$PROG: $CONFIG_DIR/head.html already exists (pass --force to overwrite)" >&2
       exit 1
     fi
     cp "$BUNDLED_HEAD" "$CONFIG_DIR/head.html"
@@ -83,11 +84,11 @@ esac
 src="$1"
 
 if ! command -v pandoc >/dev/null 2>&1; then
-  echo "mdbrowse: pandoc not found. Install it first (macOS: brew install pandoc)" >&2
+  echo "$PROG: pandoc not found. Install it first (macOS: brew install pandoc)" >&2
   exit 127
 fi
 if [ ! -f "$src" ]; then
-  echo "mdbrowse: no such file: $src" >&2
+  echo "$PROG: no such file: $src" >&2
   exit 66
 fi
 

@@ -25,6 +25,8 @@
 npm install -g @commte/mdbrowse
 ```
 
+コマンドは `mdb` と `mdbrowse` の2つの名前で入る。以下の例は短いほうで書く
+
 インストールせずに試す場合
 
 ```sh
@@ -34,7 +36,7 @@ npx @commte/mdbrowse file.md
 スタイルシートはパッケージに同梱されている。自分で編集したい場合は `~/.config/mdbrowse/head.html` に取り出す。以後はそちらが同梱版より優先される
 
 ```sh
-mdbrowse --eject
+mdb --eject
 ```
 
 <details>
@@ -46,14 +48,14 @@ cd mdbrowse
 ./install.sh
 ```
 
-`mdbrowse`（と短い別名の `mdb`）が `~/.local/bin` に、スタイルシートが `~/.config/mdbrowse/head.html` に入る。再インストールしても自分で編集したスタイルシートは上書きされない。配布時の状態に戻したいときは `--force` を付ける
+`mdb`（と長いほうの `mdbrowse`）が `~/.local/bin` に、スタイルシートが `~/.config/mdbrowse/head.html` に入る。再インストールしても自分で編集したスタイルシートは上書きされない。配布時の状態に戻したいときは `--force` を付ける
 
 </details>
 
 プレビュー用のタブを1回だけ開いて、そのままにしておく
 
 ```sh
-mdbrowse --open
+mdb --open
 ```
 
 必要なのは最初の1回だけ。以後は変換するたびに、そのタブの中身が入れ替わる。開き直すのは、タブを閉じたときとブラウザを再起動したときだけ
@@ -61,14 +63,12 @@ mdbrowse --open
 ## 使い方
 
 ```sh
-mdbrowse file.md   # 変換する（出力 HTML を上書きする）
-mdbrowse --open    # プレビュー用のタブを開く
-mdbrowse --path    # 出力先の HTML のパスを表示する
+mdb file.md   # 変換する（出力 HTML を上書きする）
+mdb --open    # プレビュー用のタブを開く
+mdb --path    # 出力先の HTML のパスを表示する
 ```
 
-手で打つとき用に、同じコマンドが `mdb` という名前でも入る
-
-ファイルの監視はしない。保存しただけでは何も起きず、`mdbrowse <file>` が走ったときにタブが切り替わる。エディタ側でキーに割り当てるか、保存時に走らせる
+ファイルの監視はしない。保存しただけでは何も起きず、`mdb <file>` が走ったときにタブが切り替わる。エディタ側でキーに割り当てるか、保存時に走らせる
 
 | 環境変数 | 既定値 | |
 |---|---|---|
@@ -113,7 +113,7 @@ mdbrowse --path    # 出力先の HTML のパスを表示する
     {
       "label": "Preview in browser",
       "type": "shell",
-      "command": "mdbrowse",
+      "command": "mdb",
       "args": ["${file}"],
       "presentation": { "reveal": "never" },
       "problemMatcher": []
@@ -128,31 +128,31 @@ mdbrowse --path    # 出力先の HTML のパスを表示する
 
 ```lua
 vim.keymap.set("n", "<leader>mp", function()
-  vim.fn.jobstart({ "mdbrowse", vim.fn.expand("%:p") })
+  vim.fn.jobstart({ "mdb", vim.fn.expand("%:p") })
 end)
 
 -- 保存のたびに更新する場合
 vim.api.nvim_create_autocmd("BufWritePost", {
   pattern = "*.md",
-  callback = function() vim.fn.jobstart({ "mdbrowse", vim.fn.expand("%:p") }) end,
+  callback = function() vim.fn.jobstart({ "mdb", vim.fn.expand("%:p") }) end,
 })
 ```
 
 ### JetBrains 系
 
-設定 → ツール → 外部ツール で `mdbrowse` を追加し、引数に `$FilePath$` を指定する。Keymap でショートカットを割り当てる
+設定 → ツール → 外部ツール で `mdb` を追加し、引数に `$FilePath$` を指定する。Keymap でショートカットを割り当てる
 
 ### Emacs
 
 ```elisp
-(defun mdbrowse ()
+(defun mdb ()
   (interactive)
-  (start-process "mdbrowse" nil "mdbrowse" (buffer-file-name)))
+  (start-process "mdb" nil "mdb" (buffer-file-name)))
 ```
 
 ### それ以外
 
-`mdbrowse /path/to/current/file.md` を実行できるエディタなら動く
+`mdb /path/to/current/file.md` を実行できるエディタなら動く
 
 ## 見た目を変える
 
@@ -163,13 +163,13 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 表示確認用に `sample.md` が入っている
 
 ```sh
-mdbrowse sample.md
+mdb sample.md
 ```
 
 ## 仕組み
 
 ```
-エディタのショートカット → mdbrowse <file> → pandoc → /tmp/mdbrowse.html
+エディタのショートカット → mdb <file> → pandoc → /tmp/mdbrowse.html
                                                       → /tmp/mdbrowse-stamp.js
                                                               ↑
                                        ブラウザがスタンプを見て、変化したときだけ再読み込み

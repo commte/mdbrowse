@@ -25,6 +25,8 @@ Because the output path never changes, switching between files does not open new
 npm install -g @commte/mdbrowse
 ```
 
+That gives you the command under two names, `mdb` and `mdbrowse`. The examples below use the short one.
+
 Or without installing anything:
 
 ```sh
@@ -34,7 +36,7 @@ npx @commte/mdbrowse file.md
 The stylesheet ships with the package. To customize it, copy it to `~/.config/mdbrowse/head.html` — that copy wins over the bundled one from then on:
 
 ```sh
-mdbrowse --eject
+mdb --eject
 ```
 
 <details>
@@ -46,14 +48,14 @@ cd mdbrowse
 ./install.sh
 ```
 
-This installs `mdbrowse` (and the shorter `mdb`) into `~/.local/bin`, and the stylesheet into `~/.config/mdbrowse/head.html`. Your stylesheet is never overwritten on reinstall; pass `--force` when you do want the shipped one back.
+This installs `mdb` (and the longer `mdbrowse`) into `~/.local/bin`, and the stylesheet into `~/.config/mdbrowse/head.html`. Your stylesheet is never overwritten on reinstall; pass `--force` when you do want the shipped one back.
 
 </details>
 
 Open the preview tab once and leave it open:
 
 ```sh
-mdbrowse --open
+mdb --open
 ```
 
 Once is enough: from then on every render swaps the contents of that tab. You only open it again after closing the tab or restarting the browser.
@@ -61,14 +63,12 @@ Once is enough: from then on every render swaps the contents of that tab. You on
 ## Usage
 
 ```sh
-mdbrowse file.md   # render (overwrites the output HTML)
-mdbrowse --open    # open the preview tab
-mdbrowse --path    # print the output HTML path
+mdb file.md   # render (overwrites the output HTML)
+mdb --open    # open the preview tab
+mdb --path    # print the output HTML path
 ```
 
-The same command is installed as `mdb`, for when you type it by hand.
-
-Nothing watches the filesystem. Saving a file does not update the preview by itself — the tab changes when `mdbrowse <file>` runs, so bind it to a key or to save in your editor.
+Nothing watches the filesystem. Saving a file does not update the preview by itself — the tab changes when `mdb <file>` runs, so bind it to a key or to save in your editor.
 
 | Variable | Default | |
 |---|---|---|
@@ -113,7 +113,7 @@ Two things worth knowing:
     {
       "label": "Preview in browser",
       "type": "shell",
-      "command": "mdbrowse",
+      "command": "mdb",
       "args": ["${file}"],
       "presentation": { "reveal": "never" },
       "problemMatcher": []
@@ -128,31 +128,31 @@ Bind it in `keybindings.json` with `workbench.action.tasks.runTask`.
 
 ```lua
 vim.keymap.set("n", "<leader>mp", function()
-  vim.fn.jobstart({ "mdbrowse", vim.fn.expand("%:p") })
+  vim.fn.jobstart({ "mdb", vim.fn.expand("%:p") })
 end)
 
 -- or update the preview on every save
 vim.api.nvim_create_autocmd("BufWritePost", {
   pattern = "*.md",
-  callback = function() vim.fn.jobstart({ "mdbrowse", vim.fn.expand("%:p") }) end,
+  callback = function() vim.fn.jobstart({ "mdb", vim.fn.expand("%:p") }) end,
 })
 ```
 
 ### JetBrains IDEs
 
-Settings → Tools → External Tools → add `mdbrowse` with `$FilePath$` as the argument, then assign a shortcut under Keymap.
+Settings → Tools → External Tools → add `mdb` with `$FilePath$` as the argument, then assign a shortcut under Keymap.
 
 ### Emacs
 
 ```elisp
-(defun mdbrowse ()
+(defun mdb ()
   (interactive)
-  (start-process "mdbrowse" nil "mdbrowse" (buffer-file-name)))
+  (start-process "mdb" nil "mdb" (buffer-file-name)))
 ```
 
 ### Anything else
 
-If your editor can run `mdbrowse /path/to/the/current/file.md`, it works.
+If your editor can run `mdb /path/to/the/current/file.md`, it works.
 
 ## Styling
 
@@ -163,13 +163,13 @@ Everything else visual lives in `~/.config/mdbrowse/head.html`: a settings block
 `sample.md` in this repository exercises headings, lists, task lists, quotes, code blocks, tables and links — render it to check your styling:
 
 ```sh
-mdbrowse sample.md
+mdb sample.md
 ```
 
 ## How it works
 
 ```
-editor shortcut → mdbrowse <file> → pandoc → /tmp/mdbrowse.html
+editor shortcut → mdb <file> → pandoc → /tmp/mdbrowse.html
                                              → /tmp/mdbrowse-stamp.js
                                                       ↑
                               browser polls the stamp, reloads only on change

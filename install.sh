@@ -35,7 +35,7 @@ if [ -d "$zed_dir" ]; then
 [
   {
     "label": "Preview in browser",
-    "command": "$bin_dir/mdbrowse",
+    "command": "$bin_dir/mdb",
     "args": ["\$ZED_FILE"],
     "reveal": "never",
     "show_summary": false,
@@ -44,7 +44,7 @@ if [ -d "$zed_dir" ]; then
   },
   {
     "label": "Open preview tab",
-    "command": "$bin_dir/mdbrowse",
+    "command": "$bin_dir/mdb",
     "args": ["--open"],
     "reveal": "never",
     "show_summary": false,
@@ -71,4 +71,4 @@ esac
 
 echo
 echo "Next: open the preview tab once, then bind a key in your editor (see README)."
-echo "  mdbrowse --open"
+echo "  mdb --open"
