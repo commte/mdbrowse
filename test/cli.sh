@@ -61,6 +61,10 @@ printf '# 空白入り\n' > "$work/日本語 ディレクトリ/空白 入り.md
 "$MDB" "$work/日本語 ディレクトリ/空白 入り.md" >/dev/null 2>&1
 check "日本語と空白のファイル名" "空白 入り.md" "$(title_of)"
 
+printf '一行目\n二行目\n' > "$work/br.md"
+"$MDB" "$work/br.md" >/dev/null 2>&1
+contains "1回の改行も改行として出す" "$(cat "$MDBROWSE_OUT")" "一行目<br"
+
 echo
 echo "相対パスの書き換え"
 

@@ -3,7 +3,7 @@
 # browser tab can stay open and just swap its contents.
 set -euo pipefail
 
-VERSION="0.3.3"
+VERSION="0.3.4"
 PROG="$(basename "$0")"
 OUT="${MDBROWSE_OUT:-/tmp/mdbrowse.html}"
 case "$OUT" in
@@ -354,8 +354,9 @@ render() {
   local tmp
   tmp="$(mktemp "$OUT.part.XXXXXX")" || return 1
 
-  # 出力先が .part なので、拡張子から形式を推測させず明示する
-  local args=(--standalone --from gfm --to html5 "${hl[@]}" --variable "pagetitle=$(basename "$src")" --output "$tmp")
+  # 出力先が .part なので、拡張子から形式を推測させず明示する。
+  # 1回だけの改行も改行として出す（GFM のままだと空白に潰れ、和文の間に空白が入る）
+  local args=(--standalone --from gfm+hard_line_breaks --to html5 "${hl[@]}" --variable "pagetitle=$(basename "$src")" --output "$tmp")
   [ -f "$HEAD" ] && args+=(--include-in-header "$HEAD")
 
   # 途中で失敗したら、そこで止めて古い表示を残す。
